@@ -6,7 +6,11 @@ if [ "$1" = "init" ]; then
         exit 1
     fi
     echo "Putting a database to /tmp/minitwit.db..."
+    python3 -m venv dbenv
+    source dbenv/bin/activate
+    pip install flask
     python -c"from minitwit import init_db;init_db()"
+    deactivate
 elif [ "$1" = "startprod" ]; then
      echo "Starting minitwit with production webserver..."
      nohup "$HOME"/.local/bin/gunicorn --workers 4 --timeout 120 --bind 0.0.0.0:5000 minitwit:app > /tmp/out.log 2>&1 &
