@@ -1,0 +1,5 @@
+com/devops/itu_minitwit/App.class
+com/devops/itu_minitwit/Json/PublicDataContainer.class
+com/devops/itu_minitwit/Controller/Controller.class
+com/devops/itu_minitwit/Database/DatabaseService.class
+com/devops/itu_minitwit/Json/PublicDataRecord.class
