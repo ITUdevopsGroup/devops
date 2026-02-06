@@ -1,16 +1,13 @@
 'use client'
 
 import Image from "next/image";
-import * as http from 'http';
-import { JSX, Key, SetStateAction,useEffect } from "react";
+import { useEffect } from "react";
 import { useState } from 'react';
 
 
 
-var host = "172.30.160.1"
-var path = ""
-var preparePath = ""
-
+var host = "http://desktop-h4nlgfr"
+var port = "5001"
 
 interface message {
   id: any;
@@ -31,7 +28,7 @@ export default function Home() {
   }, [refetch]);
 
     async function testfunc(){
-      let api = await fetch('http://desktop-h4nlgfr:5001')
+      let api = await fetch(host +":" + port)
       let apijson = await api.json()
       setItems(apijson.data);
       
