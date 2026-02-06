@@ -14,7 +14,7 @@ import com.devops.itu_minitwit.Json.PublicDataRecord;
 public class DatabaseService {
     private final String PUBLIC_SQL = "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30";
     private static final Logger log = LogManager.getLogger();
-    private static final String databasePath = "jdbc:sqlite:/tmp/minitwit.db";
+    private static final String databasePath = "jdbc:sqlite:minitwit.db";
 
     public DatabaseService() {
     }

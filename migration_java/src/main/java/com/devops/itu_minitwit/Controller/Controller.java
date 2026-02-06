@@ -25,7 +25,9 @@ public class Controller {
     log.info("GET: /");
     PublicDataContainer data = databaseService.getPublicData();
     ObjectMapper mapper = new ObjectMapper();
-    return mapper.writeValueAsString(data);
+    String result = mapper.writeValueAsString(data);
+    log.info(result);
+    return result;
   }
 
 }
