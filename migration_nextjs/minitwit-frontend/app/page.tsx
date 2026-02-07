@@ -4,6 +4,7 @@ import Image from "next/image";
 import styles from './messages.module.css'
 import { useEffect } from "react";
 import { useState } from 'react';
+import Gravatar from 'react-gravatar'
 
 
 
@@ -46,7 +47,8 @@ export default function Home() {
       <ul className="messages">
         {items?.map((item) => (
           <li key={item.messageId}>
-                <img src="{message.email}"></img>
+                <Gravatar email="{message.email}" />
+                {/* <img src="{ message.email|gravatar(size=48) }"></img> */}
                 <p>
                   <strong><a href="{{ url_for('user_timeline', username=message.username)
                   }}">{item.username }</a></strong>
