@@ -1,6 +1,7 @@
 'use client'
 
 import Image from "next/image";
+import styles from './messages.module.css'
 import { useEffect } from "react";
 import { useState } from 'react';
 
@@ -10,12 +11,15 @@ var host = "http://desktop-h4nlgfr"
 var port = "5001"
 
 interface message {
-  id: any;
-  author_id: any;
+  messageId: any;
+  authorId: any;
   text: any;
-  pub_date: string;
+  pubDate: string;
   flagged: string;
+  userId: string;
   username: string;
+  email: string;
+  pwHash: string;
 }
   
 
@@ -37,18 +41,18 @@ export default function Home() {
   console.log(items)
 
  return (
-    <div className="public">
+    <div className="messages">
       Public Timeline
-      <ul>
+      <ul className="messages">
         {items?.map((item) => (
-          <li key={item.id}>
-                <img src="{{ message.email|gravatar(size=48) }}"></img>
+          <li key={item.messageId}>
+                <img src="{message.email}"></img>
                 <p>
                   <strong><a href="{{ url_for('user_timeline', username=message.username)
                   }}">{item.username }</a></strong>
                 </p>
                 { item.text}
-                  <small>&mdash; {item.pub_date }</small>
+                  <small>&mdash; {item.pubDate }</small>
                 
               </li>
         ))}
