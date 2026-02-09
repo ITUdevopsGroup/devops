@@ -66,22 +66,23 @@ export default function Timeline() {
 
   let title = userId == undefined ? "Public Timeline" : username + "'s Timeline"
   // let followStatus = 
+  let itemsPresent = items.length > 0 ? true : false
 
  return (
     <div>
       <h2>{title}</h2>
       <ul className="messages">
-        {items.length != 0} {items?.map((item) => (
+        {itemsPresent ?  (items?.map((item) => (
           <li key={item.messageId}>
                 <Gravatar email={gravatar_url(item.email)} />
                 <p> 
-                  <strong><a href="#" onClick={() => route(router,"/timeline?user=" + item.userId + "&username="+ item.username)}>{item.username }</a></strong>
+                  <strong><a title="" onClick={() => route(router,"/timeline?user=" + item.userId + "&username="+ item.username)}>{item.username }</a></strong>
                 </p>
                 { item.text}
                   <small>&mdash; {item.pubDate }</small>
                 
               </li>
-        ))} : <li><em>There's no message so far.</em></li>
+        ))) : (<li><em>There's no message so far.</em></li>)}
     </ul>
       
     </div>
