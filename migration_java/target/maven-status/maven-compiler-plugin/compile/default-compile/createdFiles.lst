@@ -1,3 +1,6 @@
+application.properties
+schema.sql
+log4j.xml
 com/devops/itu_minitwit/App.class
 com/devops/itu_minitwit/Json/PublicDataContainer.class
 com/devops/itu_minitwit/Controller/Controller.class
