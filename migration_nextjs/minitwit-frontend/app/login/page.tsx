@@ -6,12 +6,12 @@ function route(router:any,path:string) {
   router.push(path)
 }
 
-export default function Home() {
+export default function Login() {
   
   const router = useRouter()
   const params = useParams<{ user: string}>()
   console.log("user: " + params.user)
 
 
- return route(router,"/timeline?refetch=true")
+ return (<div>Hello from Login</div>)
 }
