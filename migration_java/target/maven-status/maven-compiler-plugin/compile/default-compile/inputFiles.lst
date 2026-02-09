@@ -1,5 +1,6 @@
-/home/anders/Desktop/itu-minitwit-migration/itu-minitwit/src/main/java/com/devops/itu_minitwit/Json/PublicDataRecord.java
-/home/anders/Desktop/itu-minitwit-migration/itu-minitwit/src/main/java/com/devops/itu_minitwit/App.java
-/home/anders/Desktop/itu-minitwit-migration/itu-minitwit/src/main/java/com/devops/itu_minitwit/Database/DatabaseService.java
-/home/anders/Desktop/itu-minitwit-migration/itu-minitwit/src/main/java/com/devops/itu_minitwit/Controller/Controller.java
-/home/anders/Desktop/itu-minitwit-migration/itu-minitwit/src/main/java/com/devops/itu_minitwit/Json/PublicDataContainer.java
+/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/Database/DatabaseService.java
+/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/Json/PublicDataContainer.java
+/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/App.java
+/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/Controller/Controller.java
+/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/WebConfig.java
+/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/Json/PublicDataRecord.java
