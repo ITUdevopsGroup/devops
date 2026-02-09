@@ -31,10 +31,7 @@ function gravatar_url(email : string, size=80) {
   return result
 }
 
-function route(router:any,path:string) {
-  console.log(path)
-  router.push(path)
-}
+
 
 
   
@@ -44,14 +41,22 @@ export default function Timeline() {
   const [items, setItems] = useState(Array<message>);
   const router = useRouter()
   const params = useSearchParams()
-
   const userId =  params.get("user")
   const username =  params.get("username")
-
+  
 
   useEffect(() => { 
+      console.log("hejsa")
       userId == undefined ? getPublicTimeLine() : getUserTimeLine()
+      
   }, [items]);
+
+  function route(router:any,path:string) {
+    setItems([])
+    console.log(path)
+    
+    router.push(path)
+}
 
   async function getPublicTimeLine(){
     let api = await fetch(host +":" + port)
