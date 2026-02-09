@@ -13,5 +13,5 @@ export default function Home() {
   console.log("user: " + params.user)
 
 
- return route(router,"/timeline?refetch=true")
+ return route(router,"/timeline")
 }

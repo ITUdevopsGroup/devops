@@ -37,85 +37,72 @@ export default function Timeline() {
   
   const [items, setItems] = useState(Array<message>);
   const [refetchNew, setRefetch] = useState(true);
-  // setItems([])
+  const [userId, setUserId] = useState(undefined);
+  const [username, setUsername] = useState(undefined);
   const router = useRouter()
-  const params = useSearchParams()
-  const path = usePathname()
-  const userId =  params.get("user")
-  const username =  params.get("username")
-  var refetch =  params.get("refetch") == "true" ? true : false
+  var refetch =  true
   
   let g = {user:"",username:""}
   let loggedIn = g.user != "" ? true : false
-  
-  // let refetch = false;
-  console.log("refetch " + items.length + " user: "+ refetch)
   useEffect(() => {
-    console.log("refetch " + items.length + " user: "+ refetch)
-    if(items.length == 0  && userId == null && refetch) {
+    // console.log("refetch " + items.length + " user: "+ refetch)
+    if(items.length == 0  && (userId != undefined || userId == null) && refetch) {
       getPublicTimeLine() 
       refetch = false
     }
-   
-    else if(userId == undefined || userId == null && refetch) {
+    else if((userId == undefined || userId == null) && refetch) {
       getPublicTimeLine()
     refetch = false}
-    else if(items.length == 0 && refetch) {
-      getPublicTimeLine()
-    refetch = false}
-    else if(userId != undefined || userId != null && refetch) {
+    else if((userId != undefined || userId != null) && refetch) {
       getUserTimeLine()
     refetch = false}
-  },[items]);
+  },[refetchNew]);
 
    
 
     
+  function update(userId:any,username:any) {
+    setUserId(userId)
+    setUsername(username)
+    setRefetch(refetchNew ? false : true)
 
+}
 
   function route(router:any,path:string) {
-    refetch = false
-    // setRefetch(true)
-    // setItems([])
-    // refetch = true
-    
+    setRefetch(refetchNew ? false : true)
+    setItems([])
     router.push(path)
 }
 
   async function getPublicTimeLine(){
     refetch = false
     let api = await fetch(host +":" + port)
-    console.log("public")
     let apijson = await api.json()
     setItems(apijson.data);
-    // setRefetch(true)
-    // refetch = false
   }
     async function getUserTimeLine(){
     let api = await fetch(host +":" + port + "/user?user=" + userId)
     let apijson = await api.json()
-    console.log("user")
     setItems(apijson.data);
   }
 
   let title = userId == undefined ? "Public Timeline" : username + "'s Timeline"
-  // let followStatus = 
   let itemsPresent = items != undefined ? true : false
 
  return (
     <div>
 
-      <h1>MiniTwit</h1>
+      <h1>MiniTwit</h1> 
   <div className="navigation">
   {loggedIn ? (
     <p> 
-      <strong><a title="" onClick={() => route(router,"/timeline?user=" + g.user + "&username="+ g.username + "&refetch=true")}>my timeline</a></strong>
-      <strong><a title="" onClick={() => route(router,"/timeline")}>public timeline</a></strong>
+      <strong><a title="" onClick={() => update(g.user, g.username)}>my timeline</a></strong>
+      <strong><a title="" onClick={() => update(undefined, undefined)}>public timeline</a></strong><br />
       <strong><a title="" onClick={() => route(router,"/logout")}>sign out</a></strong>
     </p>
   ) : (
     <p>
-      <strong><a title="" onClick={() => route(router,"/timeline")}>public timeline</a></strong> <br />
+      <strong><a title="" onClick={() => update(undefined, undefined)}>public timeline</a></strong><br />
       <strong><a title="" onClick={() => route(router,"/register")}>sign up</a></strong> <br />
       <strong><a title="" onClick={() => route(router,"/login")}>sign in</a></strong> <br />
     </p>
@@ -136,7 +123,8 @@ export default function Timeline() {
         {itemsPresent ?  (items?.map((item) => (
           <li key={item.messageId}>
                 <Gravatar email={gravatar_url(item.email)} />
-                <p> <strong><a title="" onClick={() => route(router,"/timeline?user=" + item.userId + "&username="+ item.username + "&refetch=true")}>{item.username }</a></strong></p>
+                <p> <strong><a title="" onClick={() => update(item.userId, item.username)}>{item.username }</a></strong></p>
+
                 { item.text}
                   <small>&mdash; {item.pubDate }</small>
                 
