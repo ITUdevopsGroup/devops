@@ -24,25 +24,25 @@ export default function Register() {
     var password2 = formData.get('password2')
     registerUser(user,email,password,password2)
   }
+
   let error = false
   const router = useRouter()
   const params = useSearchParams()
   const userId =  params.get("user")
   const usernameSession =  params.get("username")
   let g = {user:userId,username:usernameSession}
-  let loggedIn = g.user !=null ? true : false
-
+  let loggedIn = g.user !="null" ? true : false
+  const [registerText, setRegisterText] = useState("");
 
   async function registerReqest(username:string,email:any,password:string){
     let api = await fetch(host +":" + port + "/register?user=" + username + "&email=" + email + "&password=" + password)
     let apijson = await api.json()
-    console.log("register result: " + apijson.data)
-    
   }
 
   function registerUser(username:any,email:any,password:any,password2:any) {
     let errorText = ""
-    if(userId != undefined ||userId != null || userId == "") route(router,"/timeline?user=" + userId + "&username="+ usernameSession + "&refetch=true")
+    console.log("userdid " + userId + " username "+ username)
+    if(userId != "null") route(router,"/timeline?user=" + userId + "&username="+ usernameSession + "&refetch=true")
     error = true
         if(username == undefined ||username == null || username == "") {
             errorText = 'You have to enter a username'
@@ -68,15 +68,13 @@ export default function Register() {
         }
         else {
             registerReqest(username,email,password)
-            router.push("/login")
-            console.log(errorText)
+            setRegisterText("Great! You can now sign in.")
         }
 }
 
 function get_user_id(username:string) {
     return null
 }
-
 
  return (
     <div>
@@ -85,19 +83,20 @@ function get_user_id(username:string) {
       <div className="navigation">
         {loggedIn ? (
           <p> 
-            <strong><a title="" onClick={() => route(router,"/timeline?user=" + g.user + "&username="+g.username)}>my timeline</a></strong>
+            <strong><a title="" onClick={() => route(router,"/timeline?user=" + g.user + "&username="+g.username)}>my timeline</a></strong> <br />
             <strong><a title="" onClick={() => route(router,"/timeline")}>public timeline</a></strong><br />
             <strong><a title="" onClick={() => route(router,"/logout")}>sign out</a></strong>
           </p>
         ) : (
           <p>
             <strong><a title="" onClick={() => route(router,"/timeline")}>public timeline</a></strong><br />
-            <strong><a title="" onClick={() => route(router,"/register?user=" + g.user + "&username="+g.username)}>sign up</a></strong> <br />
             <strong><a title="" onClick={() => route(router,"/login")}>sign in</a></strong> <br />
           </p>
         )}
       </div>
-        <h2>Sign Up</h2>
+      <div>{registerText}</div>
+        {registerText == "" ? (<h2>Please fill out form to sign up</h2>) : <div></div>}
+        
         {error ? (
             <div className="error">
                 <strong>
@@ -106,7 +105,8 @@ function get_user_id(username:string) {
                 error
             </div>) : <div></div>
         }
-        <form onSubmit={onSubmit}>
+        {registerText == "" ? (
+            <form onSubmit={onSubmit}>
             <dl>
                 <dt>Username:</dt>
                 <dd><input type="text" name="username" size={30} ></input></dd>
@@ -117,7 +117,10 @@ function get_user_id(username:string) {
                 <dt>Password <small>(repeat)</small>:</dt>
                 <dd><input type="password" name="password2" size={30}></input></dd>
             </dl>
-            <div className="actions"><input type="submit" value= "Sign Up"></input> </div>
+            <div className="actions"><input type="submit" value= {registerText == "" ? "Sign Up" : ""}></input> </div>
         </form>
+        ) : <div></div>
+        }
+
     </div>);
 }
