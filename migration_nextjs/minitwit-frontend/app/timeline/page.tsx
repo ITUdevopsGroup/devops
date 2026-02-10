@@ -33,11 +33,14 @@ export default function Timeline() {
   const [refetchNew, setRefetch] = useState(true);
   const [userId, setUserId] = useState(undefined);
   const [username, setUsername] = useState(undefined);
+  const params = useSearchParams()
   const router = useRouter()
   var refetch =  true
+
   
-  let g = {user:"",username:""}
-  let loggedIn = g.user != "" ? true : false
+  let g = {user:params.get("user"),username:params.get("username")}
+  console.log("user " +  g)
+  let loggedIn = g.user !=null ? true : false
   useEffect(() => {
     // console.log("refetch " + items.length + " user: "+ refetch)
     if(items.length == 0  && (userId != undefined || userId == null) && refetch) {
@@ -82,23 +85,22 @@ export default function Timeline() {
 
  return (
     <div>
-
       <h1>MiniTwit</h1> 
-  <div className="navigation">
-  {loggedIn ? (
-    <p> 
-      <strong><a title="" onClick={() => update(g.user, g.username)}>my timeline</a></strong>
-      <strong><a title="" onClick={() => update(undefined, undefined)}>public timeline</a></strong><br />
-      <strong><a title="" onClick={() => route(router,"/logout")}>sign out</a></strong>
-    </p>
-  ) : (
-    <p>
-      <strong><a title="" onClick={() => update(undefined, undefined)}>public timeline</a></strong><br />
-      <strong><a title="" onClick={() => route(router,"/register")}>sign up</a></strong> <br />
-      <strong><a title="" onClick={() => route(router,"/login")}>sign in</a></strong> <br />
-    </p>
-  )}
-  </div>
+      <div className="navigation">
+        {loggedIn ? (
+          <p> 
+            <strong><a title="" onClick={() => update(g.user, g.username)}>my timeline</a></strong>
+            <strong><a title="" onClick={() => update(undefined, undefined)}>public timeline</a></strong><br />
+            <strong><a title="" onClick={() => route(router,"/logout")}>sign out</a></strong>
+          </p>
+        ) : (
+          <p>
+            <strong><a title="" onClick={() => update(undefined, undefined)}>public timeline</a></strong><br />
+            <strong><a title="" onClick={() => route(router,"/register?user=" + g.user + "&username="+g.username)}>sign up</a></strong> <br />
+            <strong><a title="" onClick={() => route(router,"/login")}>sign in</a></strong> <br />
+          </p>
+        )}
+      </div>
   {/* {% with flashes = get_flashed_messages() %}
     {% if flashes %}
       <ul className="flashes">

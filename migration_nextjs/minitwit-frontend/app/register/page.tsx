@@ -1,47 +1,129 @@
 'use client'
 
 import { useRouter,useSearchParams  } from 'next/navigation';
+import { FormEvent,useState} from 'react'
 
 
 function route(router:any,path:string) {
   router.push(path)
 }
 
+var host = process.env.host
+var port = process.env.port
+
 
 
 export default function Register() {
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [reqRes, setReqRes] = useState<boolean>(false)
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+    var user = formData.get('username')
+    var email = formData.get('email')
+    var password = formData.get('password')
+    var password2 = formData.get('password2')
+
+    registerUser(user,email,password,password2)
+  }
+
+  let error = false
+    
   
   const router = useRouter()
   const params = useSearchParams()
   const userId =  params.get("user")
-  const username =  params.get("username")
+  const usernameSession =  params.get("username")
+  let g = {user:userId,username:usernameSession}
+  let loggedIn = g.user !=null ? true : false
 
-  function register(username:string,email:any,password:string,password2:string) {
-    let error = false
-    let errorText = ""
-    let text = ""
+
+  async function registerReqest(username:string,email:any,password:string){
+    let api = await fetch(host +":" + port + "/register?user=" + username + "&email=" + email + "&password=" + password)
+    let apijson = await api.json()
+    console.log("register result: " + apijson.data)
     
-    if(userId != undefined ||userId != null || userId != "") route(router,"/timeline?user=" + userId + "&username="+ g.username + "&refetch=true")
-    error = true
-        if(username != undefined ||username != null || username != "") 
-            errorText = 'You have to enter a username'
-        else if(email != undefined ||email != null || email != "" || email.includes('@')) errorText = 'You have to enter a valid email address'
-        else if(password != undefined ||password != null || password != "") 
-            errorText = 'You have to enter a password'
-        else if(password != password2) 
-            errorText = 'The two passwords do not match'
-        else if(get_user_id(username) != null)
-            errorText = 'The username is already taken'
-        else {
+  }
 
-            route(router,"/login")
+  function registerUser(username:any,email:any,password:any,password2:any) {
+    let errorText = ""
+    if(userId != undefined ||userId != null || userId == "") route(router,"/timeline?user=" + userId + "&username="+ usernameSession + "&refetch=true")
+    error = true
+        if(username == undefined ||username == null || username == "") {
+            errorText = 'You have to enter a username'
+            error = true
+        }
+        else if(email == undefined ||email == null || email == "" || !email.includes('@')) {
+            errorText = 'You have to enter a valid email address'
+            error = true
+        }
+        else if(password == undefined ||password == null || password == "") {
+            errorText = 'You have to enter a password'
+            error = true
+        }
+            
+        else if(password != password2) {
+            errorText = 'The two passwords do not match'
+            error = true
+        }
+            
+        else if(get_user_id(username) != null) {
+            errorText = 'The username is already taken'
+            error = true
+        }
+        else {
+            registerReqest(username,email,password)
+            router.push("/login")
+            console.log(errorText)
         }
 }
 
 function get_user_id(username:string) {
-    return ""
+    return null
 }
 
 
- return (<div>Hello from reigster</div>)
+ return (
+    <div>
+        
+      <h1>MiniTwit</h1> 
+      <div className="navigation">
+        {loggedIn ? (
+          <p> 
+            <strong><a title="" onClick={() => route(router,"/timeline?user=" + g.user + "&username="+g.username)}>my timeline</a></strong>
+            <strong><a title="" onClick={() => route(router,"/timeline")}>public timeline</a></strong><br />
+            <strong><a title="" onClick={() => route(router,"/logout")}>sign out</a></strong>
+          </p>
+        ) : (
+          <p>
+            <strong><a title="" onClick={() => route(router,"/timeline")}>public timeline</a></strong><br />
+            <strong><a title="" onClick={() => route(router,"/register?user=" + g.user + "&username="+g.username)}>sign up</a></strong> <br />
+            <strong><a title="" onClick={() => route(router,"/login")}>sign in</a></strong> <br />
+          </p>
+        )}
+      </div>
+        <h2>Sign Up</h2>
+        {error ? (
+            <div className="error">
+                <strong>
+                    Error:
+                </strong> 
+                error
+            </div>) : <div></div>
+        }
+        <form onSubmit={onSubmit}>
+            <dl>
+                <dt>Username:</dt>
+                <dd><input type="text" name="username" size={30} ></input></dd>
+                <dt>E-Mail:</dt>
+                <dd><input type="text" name="email" size={30} ></input></dd>
+                <dt>Password:</dt>
+                <dd><input type="password" name="password" size={30}></input></dd>
+                <dt>Password <small>(repeat)</small>:</dt>
+                <dd><input type="password" name="password2" size={30}></input></dd>
+            </dl>
+            <div className="actions"><input type="submit" value= {isLoading ? 'Loading...' : "Sign Up"}></input> </div>
+        </form>
+    </div>);
 }
