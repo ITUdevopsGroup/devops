@@ -13,14 +13,15 @@ import org.apache.logging.log4j.Logger;
 
 import com.devops.itu_minitwit.Json.PublicDataContainer;
 import com.devops.itu_minitwit.Json.PublicDataRecord;
+import com.devops.itu_minitwit.Json.UserData;
+import com.devops.itu_minitwit.Json.UserDataContainer;
 
 public class DatabaseService {
 
     private final String PUBLIC_SQL = "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30";
     private final String USER_SQL = "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and (user.user_id = ? or user.user_id in (select whom_id from follower where who_id = ?)) order by message.pub_date desc limit 30";
     private final String REGISTER_SQL = "insert into user (username, email, pw_hash) values (?, ?, ?)";
-                // "                [request.form['username'], request.form['email'],
-                // "                 generate_password_hash(request.form['password'])])
+    private final String SPECIFIC_USER__SQL = "select * from user where username = ?";
 
     private static final Logger log = LogManager.getLogger();
     private static final String PATH = "jdbc:sqlite:minitwit.db";
@@ -94,6 +95,35 @@ public class DatabaseService {
         }
         return null;
     }
+
+    public UserDataContainer getSpecificUserData(String userId, String pwdHash) {
+
+    log.info("Querying user data records for user: " + userId);
+        try (
+            var conn = DriverManager.getConnection(PATH);
+            var pstmt = conn.prepareStatement(SPECIFIC_USER__SQL)) {
+            pstmt.setString(1, userId);
+
+            var rs = pstmt.executeQuery();
+            UserData userData = new UserData();
+
+            while (rs.next()) {
+                userData.setUsername(rs.getString("username"));
+                userData.setUserId(rs.getInt("user_id"));
+                if(pwdHash.equals(rs.getString("pw_hash"))) {
+                    userData.setPwOK(true);
+                }
+            }
+            UserDataContainer data = new UserDataContainer(userData);
+            return data;
+        } catch (SQLException e) {
+            log.error(String.format("Querying specific user data of  user: {} failed", userId));
+            System.err.println(e.getMessage());
+        }
+        return null;
+    }
+
+    
 
     public boolean registerNewUser(String userId,String email,String pwdHash) {
     log.info("Registring new user: " + userId);
