@@ -12,8 +12,8 @@ import { log } from "console";
 
 
 
-var host = "http://desktop-h4nlgfr"
-var port = "5001"
+var host = process.env.host
+var port = process.env.port
 
 interface message {
   messageId: any;
@@ -57,9 +57,6 @@ export default function Timeline() {
       getUserTimeLine()
     refetch = false}
   },[refetchNew]);
-
-   
-
     
   function update(userId:any,username:any) {
     setUserId(userId)
