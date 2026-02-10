@@ -40,7 +40,7 @@ public class Controller {
 
   @PostConstruct
   private void initialize() {
-    random.nextBytes(salt);
+    // random.nextBytes(salt);
   }
 
   @GetMapping("/")
