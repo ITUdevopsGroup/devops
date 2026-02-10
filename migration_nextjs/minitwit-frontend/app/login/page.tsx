@@ -21,7 +21,6 @@ export default function Login() {
     }
 
   const router = useRouter()
-  const params = useParams<{ user: string}>()
 
  return (
   <div><h1>Sign in</h1>
