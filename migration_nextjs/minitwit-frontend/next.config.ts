@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   env: {
     host: "http://" + os.hostname(),
-    port : "5001"
+    port : "5001",
+    portClient : "3000"
   }
 };
 
