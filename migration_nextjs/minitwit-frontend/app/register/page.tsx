@@ -84,7 +84,7 @@ function get_user_id(username:string) {
           <p> 
             <strong><a title="" onClick={() => route(router,"/timeline?user=" + g.user + "&username="+g.username)}>my timeline</a></strong> <br />
             <strong><a title="" onClick={() => route(router,"/timeline")}>public timeline</a></strong><br />
-            <strong><a title="" onClick={() => route(router,"/logout")}>sign out</a></strong>
+            <strong><a title="" onClick={() => route(router,"/timeline")}>sign out</a></strong>
           </p>
         ) : (
           <p>
