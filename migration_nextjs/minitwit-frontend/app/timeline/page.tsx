@@ -36,14 +36,11 @@ export default function Timeline() {
   const params = useSearchParams()
   const router = useRouter()
   var refetch =  true
-
   
   let g = {user:params.get("user"),username:params.get("username")}
-  console.log("user " +  g)
   let loggedIn = g.user !=null ? true : false
   useEffect(() => {
-    // console.log("refetch " + items.length + " user: "+ refetch)
-    if(items.length == 0  && (userId != undefined || userId == null) && refetch) {
+    if(items != null &&  items.length == 0  && (userId != undefined || userId == null) && refetch) {
       getPublicTimeLine() 
       refetch = false
     }
@@ -80,8 +77,19 @@ export default function Timeline() {
     setItems(apijson.data);
   }
 
-  let title = userId == undefined ? "Public Timeline" : username + "'s Timeline"
+  let title = g.username == null ? "Public Timeline" : g.username + "'s Timeline"
   let itemsPresent = items != undefined ? true : false
+
+  function logout() {
+    g.user = null
+    g.username = null
+    setUserId(undefined)
+    setUsername(undefined)
+    setRefetch(refetchNew ? false : true)
+    setItems([])
+    router.push("/timeline")
+
+  }
 
  return (
     <div>
@@ -89,9 +97,9 @@ export default function Timeline() {
       <div className="navigation">
         {loggedIn ? (
           <p> 
-            <strong><a title="" onClick={() => update(g.user, g.username)}>my timeline</a></strong>
+            <strong><a title="" onClick={() => update(g.user, g.username)}>my timeline</a></strong><br />
             <strong><a title="" onClick={() => update(undefined, undefined)}>public timeline</a></strong><br />
-            <strong><a title="" onClick={() => route(router,"/logout")}>sign out</a></strong>
+            <strong><a title="" onClick={() => logout()}>sign out</a></strong>
           </p>
         ) : (
           <p>
