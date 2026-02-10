@@ -6,15 +6,9 @@ import { useEffect } from "react";
 import { useState } from 'react';
 import Gravatar from 'react-gravatar'
 import { useRouter,useSearchParams,usePathname   } from 'next/navigation';
-import { log } from "console";
-
-
-
-
 
 var host = process.env.host
 var port = process.env.port
-
 interface message {
   messageId: any;
   authorId: any;

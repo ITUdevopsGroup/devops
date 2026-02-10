@@ -34,8 +34,14 @@ export default function Register() {
             errorText = 'The username is already taken'
         else {
 
-            route(router,"/login")}
+            route(router,"/login")
         }
+}
+
+function get_user_id(username:string) {
+    return ""
+}
+
 
  return (<div>Hello from reigster</div>)
 }
