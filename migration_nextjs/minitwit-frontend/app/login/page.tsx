@@ -17,7 +17,6 @@ export default function Login() {
       var username = formData.get('username')
       var password = formData.get('password')
       let user = checkAccess(username,password)
-      console.log(router,"/timeline?user=" + user + "&username=" + username)
       if(username != null) route(router,"/timeline?user=" + user + "&username=" + username)
     }
 

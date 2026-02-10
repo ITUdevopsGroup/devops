@@ -36,7 +36,6 @@ export default function Register() {
 
   async function registerReqest(username:string,email:any,password:string){
     let api = await fetch(host +":" + port + "/register?user=" + username + "&email=" + email + "&password=" + password)
-    let apijson = await api.json()
   }
 
   function registerUser(username:any,email:any,password:any,password2:any) {
