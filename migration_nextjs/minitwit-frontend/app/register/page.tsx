@@ -33,16 +33,9 @@ export default function Register() {
         else if(get_user_id(username) != null)
             errorText = 'The username is already taken'
         else {
-            g.db.execute('''insert into user (
-                username, email, pw_hash) values (?, ?, ?)''',
-                [request.form['username'], request.form['email'],
-                 generate_password_hash(request.form['password'])])
-            g.db.commit()
-            text = 'You were successfully registered and can login now'
-            route(router,"/login")
-        }
-  }
 
+            route(router,"/login")}
+        }
 
  return (<div>Hello from reigster</div>)
 }
