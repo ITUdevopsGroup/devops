@@ -14,8 +14,6 @@ var port = process.env.port
 
 
 export default function Register() {
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [reqRes, setReqRes] = useState<boolean>(false)
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -24,13 +22,9 @@ export default function Register() {
     var email = formData.get('email')
     var password = formData.get('password')
     var password2 = formData.get('password2')
-
     registerUser(user,email,password,password2)
   }
-
   let error = false
-    
-  
   const router = useRouter()
   const params = useSearchParams()
   const userId =  params.get("user")
@@ -123,7 +117,7 @@ function get_user_id(username:string) {
                 <dt>Password <small>(repeat)</small>:</dt>
                 <dd><input type="password" name="password2" size={30}></input></dd>
             </dl>
-            <div className="actions"><input type="submit" value= {isLoading ? 'Loading...' : "Sign Up"}></input> </div>
+            <div className="actions"><input type="submit" value= "Sign Up"></input> </div>
         </form>
     </div>);
 }

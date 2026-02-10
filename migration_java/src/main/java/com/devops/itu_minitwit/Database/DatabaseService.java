@@ -3,6 +3,7 @@ package com.devops.itu_minitwit.Database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,11 +15,15 @@ import com.devops.itu_minitwit.Json.PublicDataContainer;
 import com.devops.itu_minitwit.Json.PublicDataRecord;
 
 public class DatabaseService {
+
     private final String PUBLIC_SQL = "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30";
     private final String USER_SQL = "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and (user.user_id = ? or user.user_id in (select whom_id from follower where who_id = ?)) order by message.pub_date desc limit 30";
+    private final String REGISTER_SQL = "insert into user (username, email, pw_hash) values (?, ?, ?)";
+                // "                [request.form['username'], request.form['email'],
+                // "                 generate_password_hash(request.form['password'])])
 
     private static final Logger log = LogManager.getLogger();
-    private static final String databasePath = "jdbc:sqlite:minitwit.db";
+    private static final String PATH = "jdbc:sqlite:minitwit.db";
 
     public DatabaseService() {
     }
@@ -26,7 +31,7 @@ public class DatabaseService {
     public static Connection connect() {
 
         try (
-            Connection conn = DriverManager.getConnection(databasePath)) {
+            Connection conn = DriverManager.getConnection(PATH)) {
             log.info("Connection to SQLite has been established.");
             return conn;
         } catch (SQLException e) {
@@ -38,7 +43,7 @@ public class DatabaseService {
     public PublicDataContainer getPublicData() {
         log.info("Querying public data records");
         try (
-            Connection conn = DriverManager.getConnection(databasePath);
+            Connection conn = DriverManager.getConnection(PATH);
             var stmt = conn.createStatement();
             var rs = stmt.executeQuery(PUBLIC_SQL)) {
             ArrayList<PublicDataRecord> data = new ArrayList<PublicDataRecord>();
@@ -51,20 +56,23 @@ public class DatabaseService {
             }
             PublicDataContainer result = new PublicDataContainer(data);
             conn.close();
+            log.info(String.format("Querying public data of succeded"));
             return result;
         } catch (SQLException e) {
+            log.error(String.format("Querying public data of failed"));
             System.err.println(e.getMessage());
         }
         return null;
     }
 
-    public PublicDataContainer getUserData(int user) {
-    log.info("Querying user data records");
+    public PublicDataContainer getUserData(int userId) {
+
+    log.info("Querying user data records for user: " + userId);
         try (
-            var conn = DriverManager.getConnection(databasePath);
+            var conn = DriverManager.getConnection(PATH);
             var pstmt = conn.prepareStatement(USER_SQL)) {
-            pstmt.setInt(1, user);
-            pstmt.setInt(2, user);
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, userId);
 
             var rs = pstmt.executeQuery();
             ArrayList<PublicDataRecord> data = new ArrayList<PublicDataRecord>();
@@ -78,10 +86,35 @@ public class DatabaseService {
             }
             PublicDataContainer result = new PublicDataContainer(data);
             conn.close();
+            log.info(String.format("Querying user data of  user: {} succeded", userId));
             return result;
         } catch (SQLException e) {
+            log.error(String.format("Querying user data of  user: {} failed", userId));
             System.err.println(e.getMessage());
         }
         return null;
+    }
+
+    public boolean registerNewUser(String userId,String email,String pwdHash) {
+    log.info("Registring new user: " + userId);
+
+        try (
+            var conn = DriverManager.getConnection(PATH);
+            var pstmt = conn.prepareStatement(REGISTER_SQL)) {
+                conn.setAutoCommit(false);
+                pstmt.setString(1, userId);
+                pstmt.setString(2, email);
+                pstmt.setString(3, pwdHash);
+                pstmt.executeUpdate();
+                log.info(String.format("Succesfully registred new user: {}, email: {}", userId,email));
+                pstmt.close();
+                conn.commit();
+                conn.close();
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+            log.error(String.format("Registration of new user: {}, email: {} failed.", userId,email));
+            return false;
+        }
+        return true;
     }
 }
