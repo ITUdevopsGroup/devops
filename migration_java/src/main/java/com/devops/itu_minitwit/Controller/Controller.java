@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.devops.itu_minitwit.Database.DatabaseService;
 import com.devops.itu_minitwit.Json.PublicDataContainer;
+import com.devops.itu_minitwit.Json.UserData;
+import com.devops.itu_minitwit.Json.UserDataContainer;
+
 import org.apache.logging.log4j.Logger;
 
 import java.security.NoSuchAlgorithmException;
@@ -23,14 +26,22 @@ import org.apache.logging.log4j.LogManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.annotation.PostConstruct;
+
 @RestController
 public class Controller {
 
-  SecureRandom random = new SecureRandom();
-  Base64.Encoder enc = Base64.getEncoder();
+  private SecureRandom random = new SecureRandom();
+  private Base64.Encoder enc = Base64.getEncoder();
+  private byte[] salt = new byte[16];
 
   private static final Logger log = LogManager.getLogger(); 
   private DatabaseService databaseService = new DatabaseService();
+
+  @PostConstruct
+  private void initialize() {
+    random.nextBytes(salt);
+  }
 
   @GetMapping("/")
   public String index() throws JsonProcessingException {
@@ -55,13 +66,25 @@ public class Controller {
     @RequestMapping(value="register", method = RequestMethod.GET)
   public @ResponseBody int registerUser(@RequestParam("user") String userId,@RequestParam("email") String email,@RequestParam("password") String password) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException{
     log.info("GET: /register");
-    byte[] salt = new byte[16];
-    random.nextBytes(salt);
     KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
     SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
     byte[] hash = f.generateSecret(spec).getEncoded();
     if(databaseService.registerNewUser(userId,email,enc.encodeToString(hash))) return 0;
     return -1;
+  }
+
+    @RequestMapping(value="spec_user", method = RequestMethod.GET)
+  public @ResponseBody String getSpecUser(@RequestParam("user") String user,@RequestParam("password") String password) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException{
+
+    log.info("GET: /spec_user");
+    KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+    SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+    byte[] hash = f.generateSecret(spec).getEncoded();
+    UserDataContainer data = databaseService.getSpecificUserData(user,enc.encodeToString(hash));
+    ObjectMapper mapper = new ObjectMapper();
+    String result = mapper.writeValueAsString(data);
+    log.info(result);
+    return result;
   }
 
 }

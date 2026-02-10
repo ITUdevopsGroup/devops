@@ -2,22 +2,79 @@
 
 import {useRouter,useParams } from 'next/navigation'
 import { FormEvent} from 'react'
+import { useEffect } from "react";
+import { useState } from 'react';
 
 function route(router:any,path:string) {
   router.push(path)
 }
 
+var host = process.env.host
+var port = process.env.port
+
 export default function Login() {
-  function checkAccess(user: FormDataEntryValue | null, password: FormDataEntryValue | null) {
-    return "hej"
+  const [usernameRemote, setUserNameRemote] = useState(undefined);
+  const [userIdRemote, setUserIdRemote] = useState(undefined);
+  const [userName, setUserName] = useState(undefined);
+  const [pwd, setPwd] = useState(undefined);
+  const [pwdOk, setPwdOk] = useState(false);
+  const [shoudldFetch, setShouldFetch] = useState(false);
+  const [dataAPI, setDataAPI] = useState<message>();
+  const [errorText, setErrorText] = useState("");
+
+  interface message {
+  username: any;
+  userId: any;
+  pwOK: any;
 }
+
+ useEffect(() => {
+    console.log("async!!")
+      setUserNameRemote(dataAPI?.username)
+      setUserIdRemote(dataAPI?.userId)
+      setPwdOk(dataAPI?.pwOK)
+      
+      
+      console.log(dataAPI?.pwOK)
+      console.log(dataAPI?.username)
+      console.log(dataAPI?.userId)
+      if(usernameRemote != "" && usernameRemote != null && userName == usernameRemote && pwdOk) {
+        setErrorText("")
+        route(router,"/timeline?user=" + userIdRemote + "&username=" + usernameRemote)
+      } 
+      else {
+        dataAPI?.username != "" ? setErrorText("Wrong user name or password") : setErrorText("")
+      }
+
+       },[dataAPI]);
+
+  useEffect(() => {
+    
+      fetchReq(userName,pwd)
+       },[shoudldFetch]);
+  
+
+    async function fetchReq(user:any, password:any) {
+      
+      let api = await fetch(host +":" + port + "/spec_user?user=" + user + "&password=" + password)
+      let apijson = await api.json()
+      setDataAPI(apijson.userData)
+      setShouldFetch(false)
+
+      
+      if(usernameRemote != "" && usernameRemote != null && user == usernameRemote && pwdOk) route(router,"/timeline?user=" + userIdRemote + "&username=" + usernameRemote)
+
+    }
+  
     async function onSubmit(event: FormEvent<HTMLFormElement>) {
+      setErrorText("")
       event.preventDefault()
       const formData = new FormData(event.currentTarget)
-      var username = formData.get('username')
-      var password = formData.get('password')
-      let user = checkAccess(username,password)
-      if(username != null) route(router,"/timeline?user=" + user + "&username=" + username)
+      let username:any = formData.get('username')?.toString()
+      let pwd:any = formData.get('password')?.toString()
+      setUserName(username)
+      setPwd(pwd)
+      setShouldFetch(true)
     }
 
   const router = useRouter()
@@ -33,6 +90,7 @@ export default function Login() {
             </dl>
             <div className="actions"><input type="submit" value= "Sign In"></input> </div>
         </form>
+        <div>{errorText }</div>
   </div>)
 }
 
