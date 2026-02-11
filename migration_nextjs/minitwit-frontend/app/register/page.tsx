@@ -15,6 +15,9 @@ var port = process.env.port
 
 export default function Register() {
 
+    const [errorText, setErrorText] = useState("");
+  const [error, setError] = useState(false);
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
@@ -25,7 +28,6 @@ export default function Register() {
     registerUser(user,email,password,password2)
   }
 
-  let error = false
   const router = useRouter()
   const params = useSearchParams()
   const userId =  params.get("user")
@@ -39,35 +41,35 @@ export default function Register() {
   }
 
   function registerUser(username:any,email:any,password:any,password2:any) {
-    let errorText = ""
     console.log("userdid " + userId + " username "+ username)
     if(userId != "null") route(router,"/timeline?user=" + userId + "&username="+ usernameSession + "&refetch=true")
-    error = true
+    setError(true)
         if(username == undefined ||username == null || username == "") {
-            errorText = 'You have to enter a username'
-            error = true
+            setErrorText('You have to enter a username')
+            setError(true)
         }
         else if(email == undefined ||email == null || email == "" || !email.includes('@')) {
-            errorText = 'You have to enter a valid email address'
-            error = true
+            setErrorText('You have to enter a valid email address')
+            setError(true)
         }
         else if(password == undefined ||password == null || password == "") {
-            errorText = 'You have to enter a password'
-            error = true
+            setErrorText('You have to enter a password')
+            setError(true)
         }
             
         else if(password != password2) {
-            errorText = 'The two passwords do not match'
-            error = true
+            setErrorText('The two passwords do not match')
+            setError(true)
         }
             
         else if(get_user_id(username) != null) {
-            errorText = 'The username is already taken'
-            error = true
+            setErrorText('The username is already taken')
+            setError(true)
         }
         else {
+            setErrorText("")
             registerReqest(username,email,password)
-            setRegisterText("Great! You can now sign in.")
+            alert("Great! You can now sign in.")
         }
 }
 
@@ -99,10 +101,9 @@ function get_user_id(username:string) {
         {error ? (
             <div className="error">
                 <strong>
-                    Error:
+                    {errorText}
                 </strong> 
-                error
-            </div>) : <div></div>
+            </div>) : ""
         }
         {registerText == "" ? (
             <form onSubmit={onSubmit}>
