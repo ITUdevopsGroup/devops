@@ -28,7 +28,7 @@ public class DatabaseService {
     private final String FOLLOW = "insert into follower (who_id, whom_id) values (?, ?)";
     private final String UNFOLLOW = "delete from follower where who_id=? and whom_id=?";
     private final String ADD_MESSAGE = "insert into message (author_id, text, pub_date, flagged) values (?, ?, ?, 0)";
-    private final String GET_USER_ID = "select user_id from user where username = ?";
+    private final String GET_USER_ID = "select user_id,username from user where username = ?";
     
 
     private static final Logger log = LogManager.getLogger();
@@ -74,16 +74,16 @@ public class DatabaseService {
         return null;
     }
 
-    public PublicDataContainer getUserData(int userId,String profileUser) {
+    public PublicDataContainer getUserData(int sessionUser,String profileUser) {
 
-    log.info("Querying user data records for user: " + userId);
-        ResultContainer followed =  isFollowed(userId, profileUser != null ? profileUser : "");
+    log.info("Querying user data records for user: " + sessionUser);
+        ResultContainer followed =  isFollowed(sessionUser, profileUser != null ? profileUser : "");
 
         try (
             var conn = DriverManager.getConnection(PATH);
             var pstmt = conn.prepareStatement(USER_SQL)) {
-            pstmt.setInt(1, userId);
-            pstmt.setInt(2, userId);
+            pstmt.setInt(1, sessionUser);
+            pstmt.setInt(2, sessionUser);
 
             var rs = pstmt.executeQuery();
             ArrayList<PublicDataRecord> data = new ArrayList<PublicDataRecord>();
@@ -97,10 +97,10 @@ public class DatabaseService {
             }
             PublicDataContainer result = new PublicDataContainer(data,followed.getUserData().isResult());
             conn.close();
-            log.info(String.format("Querying user data of  user: {} succeded", userId));
+            log.info(String.format("Querying user data of  user: {} succeded", sessionUser));
             return result;
         } catch (SQLException e) {
-            log.error(String.format("Querying user data of  user: {} failed", userId));
+            log.error(String.format("Querying user data of  user: {} failed", sessionUser));
             System.err.println(e.getMessage());
         }
         return null;
@@ -190,7 +190,7 @@ public class DatabaseService {
 
     }
 
-        public ResultContainer isFollowed(int userId,String profileUser) {
+        public ResultContainer isFollowed(int sessionUser,String profileUser) {
         log.info("Checkking follow status for user: " + profileUser);
         UserDataContainer profileUserId = getUserId(profileUser);
         
@@ -199,19 +199,19 @@ public class DatabaseService {
             var conn = DriverManager.getConnection(PATH);
             var pstmt = conn.prepareStatement(IS_FOLLOWED)) {
                 conn.setAutoCommit(false);
-                pstmt.setInt(1, userId);
+                pstmt.setInt(1, sessionUser);
                 pstmt.setInt(2, profileUserId.getUserData().getUserId());
                 ResultSet rs = pstmt.executeQuery();
                 while (rs.next()) {
                     result =true;
                 }
-                log.info(String.format("Succesfully checked follow status: {}, profileUser: {}", userId,profileUser));
+                log.info(String.format("Succesfully checked follow status: {}, profileUser: {}", sessionUser,profileUser));
                 pstmt.close();
                 conn.commit();
                 conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
-            log.error(String.format("Check of follow status: {}, profileUser: {} failed", userId,profileUser));
+            log.error(String.format("Check of follow status: {}, profileUser: {} failed", sessionUser,profileUser));
             return new ResultContainer(new Result(String.format("DB_ERROR"),true,false));
 
         }

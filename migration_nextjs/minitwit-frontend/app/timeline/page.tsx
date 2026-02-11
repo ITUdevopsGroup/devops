@@ -35,6 +35,7 @@ function gravatar_url(email : string, size=80) {
 
 export default function Timeline() {
   const [items, setItems] = useState(Array<message>);
+  const [apiData, setApiData] = useState<any>();
   const [dataFollow, setDataFollow] = useState<result>();
   const [dataUnFollow, setDataUnFollow] = useState<result>();
   const [dataAddMessage, setDataAddMessage] = useState<result>();
@@ -91,11 +92,12 @@ export default function Timeline() {
     
   }
     async function getUserTimeLine(){
-     console.log("je "+ session.user) 
-    let api = await fetch(host +":" + port + "/user?user=" + userId + "&profile=" + session.user)
+    console.log(host +":" + port + "/user?user=" + userId + "&profile=" + session.username)
+    let api = await fetch(host +":" + port + "/user?user=" + userId + "&profile=" + username)
     let apijson = await api.json()
     setItems(apijson.data);
-    setFollowed(apijson.data.followed)
+    setFollowed(apijson.followed)
+    console.log("user req followed " + followed)
   }
 
   function follow(username:any) {
@@ -172,6 +174,7 @@ export default function Timeline() {
   },[refetchNew]);
 
     useEffect(() => {
+      console.log("followed " + followed)
     evaluateTimeline()
   },[followed]);
 
