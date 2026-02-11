@@ -46,10 +46,10 @@ public class Controller {
   }
 
   @RequestMapping(value="user", method = RequestMethod.GET)
-  public @ResponseBody String getUserData(@RequestParam("user") int user,@RequestParam("profile") String profile) throws JsonProcessingException{
+  public @ResponseBody String getUserData(@RequestParam("user") int sessionUser,@RequestParam("profile") String profile) throws JsonProcessingException{
 
     log.info("GET: /user");
-    PublicDataContainer data = databaseService.getUserData(user,profile);
+    PublicDataContainer data = databaseService.getUserData(sessionUser,profile);
     String result = mapper.writeValueAsString(data);
     log.info(result);
     return result;
@@ -78,7 +78,7 @@ public class Controller {
   }
 
   @RequestMapping(value="is_followed", method = RequestMethod.GET)
-  public @ResponseBody String isFollowed(@RequestParam("user") int userId,@RequestParam("profile") int profile) throws JsonProcessingException{
+  public @ResponseBody String isFollowed(@RequestParam("user") int userId,@RequestParam("profile") String profile) throws JsonProcessingException{
     log.info("GET: /is_followed");
     ResultContainer data =  databaseService.isFollowed(userId,profile);
     String result = mapper.writeValueAsString(data);

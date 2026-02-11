@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class PublicDataContainer {
     ArrayList<PublicDataRecord> data = new ArrayList<PublicDataRecord>();
 
-        private boolean followed;
+    private boolean followed;
     
     
     public PublicDataContainer() {
