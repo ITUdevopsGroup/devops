@@ -3,7 +3,7 @@ package com.devops.itu_minitwit.Json;
 public class UserDataContainer {
     private UserData userData;
 
-    
+
     public UserDataContainer() {
     }
 

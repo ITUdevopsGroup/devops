@@ -29,15 +29,9 @@ export default function Login() {
 }
 
  useEffect(() => {
-    console.log("async!!")
       setUserNameRemote(dataAPI?.username)
       setUserIdRemote(dataAPI?.userId)
       setPwdOk(dataAPI?.pwOK)
-      
-      
-      console.log(dataAPI?.pwOK)
-      console.log(dataAPI?.username)
-      console.log(dataAPI?.userId)
       if(usernameRemote != "" && usernameRemote != null && userName == usernameRemote && pwdOk) {
         setErrorText("")
         route(router,"/timeline?user=" + userIdRemote + "&username=" + usernameRemote)

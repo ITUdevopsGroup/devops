@@ -21,6 +21,12 @@ interface message {
   pwHash: string;
 }
 
+interface result {
+  status: any;
+  error: any;
+  result: any;
+}
+
 function gravatar_url(email : string, size=80) {
   let emailFormat = email.trim().toLowerCase() + "?d=identicon&s="+ size
   let result = "'http://www.gravatar.com/avatar/" +  emailFormat ;
@@ -28,14 +34,20 @@ function gravatar_url(email : string, size=80) {
 }
 
 export default function Timeline() {
-  
   const [items, setItems] = useState(Array<message>);
+  const [dataFollow, setDataFollow] = useState<result>();
+  const [dataUnFollow, setDataUnFollow] = useState<result>();
+  const [dataAddMessage, setDataAddMessage] = useState<result>();
+  const [dataIsFollowed, setDataIsFollowed] = useState<result>();
   const [refetchNew, setRefetch] = useState(true);
   const [userId, setUserId] = useState(undefined);
   const [username, setUsername] = useState(undefined);
+  const [subTitle, setSubTitle] = useState<any>();
   const [timelineText, setTimelineText] = useState("public");
   const [timeline, setTimeline] = useState("");
   const [followed, setFollowed] = useState(false);
+  const [shouldFollow,setShouldFollow] = useState(false);
+    const [shouldUnFollow,setShouldUnFollow] = useState(false);
   const params = useSearchParams()
   const router = useRouter()
   var refetch =  true
@@ -54,6 +66,7 @@ export default function Timeline() {
       getUserTimeLine()
     refetch = false}
   },[refetchNew]);
+
     
   function update(userId:any,username:any) {
     setUserId(userId)
@@ -62,9 +75,6 @@ export default function Timeline() {
     if(username == undefined) setTimelineText("public")
     else if(username != session.username) setTimelineText("user_timeline")
     else setTimelineText("timeline")
-    console.log("session " + session.username + " user " + username + " timeline " + timelineText)
-
-
 }
 
   function route(router:any,path:string) {
@@ -78,34 +88,95 @@ export default function Timeline() {
     let api = await fetch(host +":" + port)
     let apijson = await api.json()
     setItems(apijson.data);
+    
   }
     async function getUserTimeLine(){
-    let api = await fetch(host +":" + port + "/user?user=" + userId)
+     console.log("je "+ session.user) 
+    let api = await fetch(host +":" + port + "/user?user=" + userId + "&profile=" + session.user)
     let apijson = await api.json()
     setItems(apijson.data);
+    setFollowed(apijson.data.followed)
   }
 
   function follow(username:any) {
-    alert("You are now following " + username)
+    setShouldFollow(true)
   }
-  function unfollow(username:any) {
-    alert("You are no longer following " + username)
 
+
+  useEffect(() => {
+    if(dataFollow?.result) {
+      setFollowed(true)
+      alert("You are now following " + username)
+      }
+    else if(dataFollow?.error) alert("Something went wrong w. following " + username)
+  },[dataFollow]);
+
+    useEffect(() => {
+      if(shouldFollow) {
+        followReq("follow")
+        setShouldFollow(false)
+      }
+  },[shouldFollow]);
+
+
+    async function followReq(followReq:any) {
+    let api = await fetch(host +":" + port + "/" + followReq + "?user=" + session.user + "&profile=" + username)
+    let apijson = await api.json()
+    if(followReq == "follow") setDataFollow(apijson.userData)
+    else if(followReq == "unfollow") setDataUnFollow(apijson.userData)
   }
+
+  function unfollow(username:any) {
+    setShouldUnFollow(true)
+  }
+
+    useEffect(() => {
+    if(dataUnFollow?.result) {
+      setFollowed(false)
+      if(followed) alert("You are no longer following " + username)
+      }
+    else if(dataUnFollow?.error) alert("Something went wrong w. unfollow " + username)
+  },[dataUnFollow]);
+
+    useEffect(() => {
+      if(shouldUnFollow) {
+        followReq("unfollow")
+        setShouldUnFollow(false)
+      }
+  },[shouldUnFollow]);
+
   async function addMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
     var text = formData.get('text')
     alert('Your message was recorded')
-    console.log("text "+ text)
   }
 
   let title = timelineText == "public" ? "Public Timeline" : timelineText == "user_timeline" ? username + "'s Timeline" : "My timeline"
-  let subTitle = timelineText == "user_timeline" ? session.username == username ? 
-    <div>This is you! <br /></div> : 
-      followed ? 
-        <div>You are currently following this user<p> <a className="unfollow" title="" onClick={() => unfollow(username)}> Unfollow user</a></p></div> : 
-        <div>You are not yet following this user<a className="follow" title="" onClick={() => follow(username)}>Follow user</a>.</div> : ""
+
+  function evaluateTimeline() {
+  if(timelineText == "user_timeline" && session.username == username && session.username != null) {
+      setSubTitle(<div>This is you! <br /></div>)
+    } else if(followed && timelineText == "user_timeline" && session.username != username && session.username != null) {
+      setSubTitle(<div>You are currently following this user<p> <a className="unfollow" title="" onClick={() => unfollow(username)}> Unfollow user</a></p></div> )
+    } else if(!followed && timelineText == "user_timeline" && session.username != username && session.username != null) {
+      setSubTitle(<div>You are not yet following this user<a className="follow" title="" onClick={() => follow(username)}>Follow user</a>.</div>)
+    } else {
+      setSubTitle("")
+    }
+  }
+  // if(refetchNew) evaluateTimeline()
+
+    useEffect(() => {
+    evaluateTimeline()
+  },[refetchNew]);
+
+    useEffect(() => {
+    evaluateTimeline()
+  },[followed]);
+
+    
+
 
   let addMessageView = timelineText == "timeline" ? 
         <div className="twitbox">
