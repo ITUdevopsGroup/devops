@@ -42,7 +42,7 @@ export default function Timeline() {
   const [dataAddMessage, setDataAddMessage] = useState<result>();
   const [shouldAddMessage, setShouldAddMessage] = useState(false);
   const [dataIsFollowed, setDataIsFollowed] = useState<result>();
-  const [refetchNew, setRefetch] = useState(true);
+  const [shouldRefetch, setShouldRefetch] = useState(true);
   const [userId, setUserId] = useState(undefined);
   const [username, setUsername] = useState(undefined);
   const [subTitle, setSubTitle] = useState<any>();
@@ -69,20 +69,20 @@ export default function Timeline() {
     else if((userId != undefined || userId != null) && refetch) {
       getUserTimeLine()
     refetch = false}
-  },[refetchNew]);
+  },[shouldRefetch]);
 
     
   function update(userId:any,username:any) {
     setUserId(userId)
     setUsername(username)
-    setRefetch(refetchNew ? false : true)
+    setShouldRefetch(shouldRefetch ? false : true)
     if(username == undefined) setTimelineText("public")
     else if(username != session.username) setTimelineText("user_timeline")
     else setTimelineText("timeline")
 }
 
   function route(router:any,path:string) {
-    setRefetch(refetchNew ? false : true)
+    setShouldRefetch(shouldRefetch ? false : true)
     setItems([])
     router.push(path)
 }
@@ -179,8 +179,7 @@ export default function Timeline() {
       alert('Your message was recorded')
       setShouldAddMessage(false)
       setDataAddMessage(undefined)
-      setTimelineText("timeline")
-      window.location.reload();
+      setShouldRefetch(shouldRefetch ? false : true)
       }
     else if(dataAddMessage?.error) alert("Something went wrong while posting the message")
     
@@ -207,11 +206,10 @@ export default function Timeline() {
       setSubTitle("")
     }
   }
-  // if(refetchNew) evaluateTimeline()
 
     useEffect(() => {
     evaluateTimeline()
-  },[refetchNew]);
+  },[shouldRefetch]);
 
     useEffect(() => {
     evaluateTimeline()
@@ -239,7 +237,7 @@ export default function Timeline() {
     session.username = null
     setUserId(undefined)
     setUsername(undefined)
-    setRefetch(refetchNew ? false : true)
+    setShouldRefetch(shouldRefetch ? false : true)
     setItems([])
     router.push("/")
   }
