@@ -289,7 +289,7 @@ public class DatabaseService {
         return new ResultContainer(new Result("OK", false,true));
     }
 
-        public ResultContainer addMessage(String userId,String text,int pubDate,boolean flagged) {
+        public ResultContainer addMessage(String userId,String text,String pubDate,String flagged) {
             log.info("Add message for user: " + userId);
 
             try (
@@ -298,8 +298,7 @@ public class DatabaseService {
                 conn.setAutoCommit(false);
                 pstmt.setString(1, userId);
                 pstmt.setString(2, text);
-                pstmt.setInt(3, pubDate);
-                pstmt.setBoolean(4, flagged);
+                pstmt.setString(3, pubDate);
     
                 pstmt.executeUpdate();
                 log.info(String.format("Succesfully added message for: {}", userId));

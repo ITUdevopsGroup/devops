@@ -32,6 +32,7 @@ function gravatar_url(email : string, size=80) {
   let result = "'http://www.gravatar.com/avatar/" +  emailFormat ;
   return result
 }
+var addMessageText:any = ""
 
 export default function Timeline() {
   const [items, setItems] = useState(Array<message>);
@@ -39,6 +40,7 @@ export default function Timeline() {
   const [dataFollow, setDataFollow] = useState<result>();
   const [dataUnFollow, setDataUnFollow] = useState<result>();
   const [dataAddMessage, setDataAddMessage] = useState<result>();
+  const [shouldAddMessage, setShouldAddMessage] = useState(false);
   const [dataIsFollowed, setDataIsFollowed] = useState<result>();
   const [refetchNew, setRefetch] = useState(true);
   const [userId, setUserId] = useState(undefined);
@@ -52,6 +54,7 @@ export default function Timeline() {
   const params = useSearchParams()
   const router = useRouter()
   var refetch =  true
+  
   
   let session = {user:params.get("user"),username:params.get("username")}
   let loggedIn = session.user !=null ? true : false
@@ -145,12 +148,51 @@ export default function Timeline() {
       }
   },[shouldUnFollow]);
 
+  useEffect(() => {
+    if(dataUnFollow?.result) {
+      setFollowed(false)
+      if(followed) alert("You are no longer following " + username)
+      }
+    else if(dataUnFollow?.error) alert("Something went wrong w. unfollow " + username)
+  },[dataUnFollow]);
+
+    useEffect(() => {
+      if(shouldUnFollow) {
+        followReq("unfollow")
+        setShouldUnFollow(false)
+      }
+  },[shouldUnFollow]);
+
   async function addMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    
+    
     const formData = new FormData(event.currentTarget)
-    var text = formData.get('text')
-    alert('Your message was recorded')
+    addMessageText = formData.get('text')
+    setShouldAddMessage(true)
+    
+    
   }
+
+  useEffect(() => {
+    if(dataAddMessage?.result) {
+      alert('Your message was recorded')
+      setShouldAddMessage(false)
+      setDataAddMessage(undefined)
+      setTimelineText("timeline")
+      window.location.reload();
+      }
+    else if(dataAddMessage?.error) alert("Something went wrong while posting the message")
+    
+    
+  },[shouldAddMessage]);
+
+    useEffect(() => {
+      if(shouldAddMessage) {
+        addMessageRequest(session.user, addMessageText,false)
+        
+      }
+  },[shouldAddMessage]);
 
   let title = timelineText == "public" ? "Public Timeline" : timelineText == "user_timeline" ? username + "'s Timeline" : "My timeline"
 
@@ -200,8 +242,17 @@ export default function Timeline() {
     setRefetch(refetchNew ? false : true)
     setItems([])
     router.push("/")
-
   }
+
+  async function addMessageRequest(user:any,text:any,flagged:boolean) {
+  let date = new Date()
+  let pubDate = +date
+    let api = await fetch(host +":" + port + "/add_message?user=" + user + "&text=" + text + "&pubDate=" + pubDate + "&flagged=" + flagged)
+    let apijson = await api.json()
+    setDataAddMessage(apijson.userData)
+    setShouldAddMessage(false)
+  }
+
 
  return (
     <div>
@@ -253,3 +304,5 @@ export default function Timeline() {
     );
   
 }
+
+
