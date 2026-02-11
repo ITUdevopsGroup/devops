@@ -79,11 +79,19 @@ public class DatabaseService {
     log.info("Querying user data records for user: " + sessionUser);
         ResultContainer followed =  isFollowed(sessionUser, profileUser != null ? profileUser : "");
 
+        UserDataContainer userdata = getUserId(profileUser);
+
+        if(userdata != null  && userdata.getUserData().getUserId() == 0) {
+            log.error("User doesnt exist: "+ profileUser);
+            return new PublicDataContainer();
+        } else if(userdata == null) return new PublicDataContainer();
+
+
         try (
             var conn = DriverManager.getConnection(PATH);
             var pstmt = conn.prepareStatement(USER_SQL)) {
-            pstmt.setInt(1, sessionUser);
-            pstmt.setInt(2, sessionUser);
+            pstmt.setInt(1, userdata.getUserData().getUserId());
+            pstmt.setInt(2, userdata.getUserData().getUserId());
 
             var rs = pstmt.executeQuery();
             ArrayList<PublicDataRecord> data = new ArrayList<PublicDataRecord>();
@@ -232,8 +240,8 @@ public class DatabaseService {
             var conn = DriverManager.getConnection(PATH);
             var pstmt = conn.prepareStatement(FOLLOW)) {
                 conn.setAutoCommit(false);
-                pstmt.setString(1, userId);
-                pstmt.setInt(2, whom);
+                pstmt.setInt(1, whom);
+                pstmt.setString(2, userId);
                 
     
                 pstmt.executeUpdate();
@@ -263,8 +271,9 @@ public class DatabaseService {
             var conn = DriverManager.getConnection(PATH);
             var pstmt = conn.prepareStatement(UNFOLLOW)) {
                 conn.setAutoCommit(false);
-                pstmt.setString(1, userId);
-                pstmt.setInt(2, whom);
+                
+                pstmt.setInt(1, whom);
+                pstmt.setString(2, userId);
     
                 pstmt.executeUpdate();
                 log.info(String.format("Succesfully unfollowed: {}, profileUser: {}", userId,whom));

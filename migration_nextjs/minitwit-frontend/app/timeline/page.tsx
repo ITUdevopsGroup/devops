@@ -92,8 +92,8 @@ export default function Timeline() {
     
   }
     async function getUserTimeLine(){
-    console.log(host +":" + port + "/user?user=" + userId + "&profile=" + session.username)
-    let api = await fetch(host +":" + port + "/user?user=" + userId + "&profile=" + username)
+    console.log(host +":" + port + "/user?user=" + session.user + "&profile=" + username)
+    let api = await fetch(host +":" + port + "/user?user=" + session.user + "&profile=" + username)
     let apijson = await api.json()
     setItems(apijson.data);
     setFollowed(apijson.followed)
