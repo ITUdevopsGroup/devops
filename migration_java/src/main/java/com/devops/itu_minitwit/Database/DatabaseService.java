@@ -2,6 +2,7 @@ package com.devops.itu_minitwit.Database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public class DatabaseService {
                     rs.getInt("user_id"),rs.getString("username"),rs.getString("email"),rs.getString("pw_hash"));
                 data.add(record);
             }
-            PublicDataContainer result = new PublicDataContainer(data);
+            PublicDataContainer result = new PublicDataContainer(data,false);
             conn.close();
             log.info(String.format("Querying public data of succeded"));
             return result;
@@ -73,9 +74,11 @@ public class DatabaseService {
         return null;
     }
 
-    public PublicDataContainer getUserData(int userId) {
+    public PublicDataContainer getUserData(int userId,String profileUser) {
 
     log.info("Querying user data records for user: " + userId);
+        ResultContainer followed =  isFollowed(userId, profileUser != null ? profileUser : "");
+
         try (
             var conn = DriverManager.getConnection(PATH);
             var pstmt = conn.prepareStatement(USER_SQL)) {
@@ -92,7 +95,7 @@ public class DatabaseService {
                     rs.getInt("user_id"),rs.getString("username"),rs.getString("email"),rs.getString("pw_hash"));
                 data.add(record);
             }
-            PublicDataContainer result = new PublicDataContainer(data);
+            PublicDataContainer result = new PublicDataContainer(data,followed.getUserData().isResult());
             conn.close();
             log.info(String.format("Querying user data of  user: {} succeded", userId));
             return result;
@@ -122,6 +125,7 @@ public class DatabaseService {
                 }
             }
             UserDataContainer data = new UserDataContainer(userData);
+            conn.close();
             return data;
         } catch (SQLException e) {
             log.error(String.format("Querying specific user data of  user: {} failed", userId));
@@ -142,10 +146,11 @@ public class DatabaseService {
             UserData userData = new UserData();
 
             while (rs.next()) {
-                userData.setUsername(rs.getString("username"));
                 userData.setUserId(rs.getInt("user_id"));
             }
             UserDataContainer data = new UserDataContainer(userData);
+            pstmt.close();
+            conn.close();
             return data;
         } catch (SQLException e) {
             log.error(String.format("Get use id: {} failed", username));
@@ -159,7 +164,7 @@ public class DatabaseService {
     public ResultContainer registerNewUser(String username,String email,String pwdHash) {
     log.info("Registring new user: " + username);
         UserDataContainer userdata = getUserId(username);
-        if(userdata != null) {
+        if(userdata != null  && userdata.getUserData().getUserId() != 0) {
             log.error("User already exists: "+ username);
             return new ResultContainer(new Result("EXISTS", true,false));
         }
@@ -185,17 +190,21 @@ public class DatabaseService {
 
     }
 
-        public ResultContainer isFollowed(String userId,String profileUser) {
-    log.info("Checkking follow status for user: " + profileUser);
-
+        public ResultContainer isFollowed(int userId,String profileUser) {
+        log.info("Checkking follow status for user: " + profileUser);
+        UserDataContainer profileUserId = getUserId(profileUser);
+        
+        boolean result = false;
         try (
             var conn = DriverManager.getConnection(PATH);
             var pstmt = conn.prepareStatement(IS_FOLLOWED)) {
                 conn.setAutoCommit(false);
-                pstmt.setString(1, userId);
-                pstmt.setString(2, profileUser);
-    
-                pstmt.executeUpdate();
+                pstmt.setInt(1, userId);
+                pstmt.setInt(2, profileUserId.getUserData().getUserId());
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    result =true;
+                }
                 log.info(String.format("Succesfully checked follow status: {}, profileUser: {}", userId,profileUser));
                 pstmt.close();
                 conn.commit();
@@ -206,14 +215,14 @@ public class DatabaseService {
             return new ResultContainer(new Result(String.format("DB_ERROR"),true,false));
 
         }
-        return new ResultContainer(new Result("OK", false,true));
+        return new ResultContainer(new Result("OK", false,result));
     }
 
     public ResultContainer follow(String userId,String whoUsername) {
         log.info("Follow user: " + userId);
         int whom;
         UserDataContainer userdata = getUserId(whoUsername);
-        if(userdata != null) whom = userdata.getUserData().getUserId();
+        if(userdata != null && userdata.getUserData().getUserId() != 0) whom = userdata.getUserData().getUserId();
         else {
             log.error("User doesnt exists: "+ whoUsername);
             return new ResultContainer(new Result(String.format("NOT_EXISTS"),true,false));
@@ -225,6 +234,7 @@ public class DatabaseService {
                 conn.setAutoCommit(false);
                 pstmt.setString(1, userId);
                 pstmt.setInt(2, whom);
+                
     
                 pstmt.executeUpdate();
                 log.info(String.format("Succesfully followed: {}, profileUser: {}", userId,whom));
@@ -243,7 +253,7 @@ public class DatabaseService {
         log.info("Unfollow user: " + userId);
         int whom;
         UserDataContainer userdata = getUserId(whoUsername);
-        if(userdata != null) whom = userdata.getUserData().getUserId();
+        if(userdata != null && userdata.getUserData().getUserId() != 0) whom = userdata.getUserData().getUserId();
         else {
             log.error("User doesnt exist: "+ whoUsername);
             return new ResultContainer(new Result(String.format("NOT_EXISTS"),true,false));
