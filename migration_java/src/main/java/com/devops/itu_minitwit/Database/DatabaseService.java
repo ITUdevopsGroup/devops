@@ -174,7 +174,7 @@ public class DatabaseService {
         UserDataContainer userdata = getUserId(username);
         if(userdata != null  && userdata.getUserData().getUserId() != 0) {
             log.error("User already exists: "+ username);
-            return new ResultContainer(new Result("EXISTS", true,false));
+            return new ResultContainer(new Result("The username is already taken", true,false));
         }
 
         try (
