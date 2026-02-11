@@ -46,10 +46,12 @@ public class Controller {
   }
 
   @RequestMapping(value="user", method = RequestMethod.GET)
-  public @ResponseBody String getUserData(@RequestParam("user") int sessionUser,@RequestParam("profile") String profile) throws JsonProcessingException{
+  public @ResponseBody String getUserData(@RequestParam("user") String sessionUser,@RequestParam("profile") String profile) throws JsonProcessingException{
 
     log.info("GET: /user");
-    PublicDataContainer data = databaseService.getUserData(sessionUser,profile);
+    int sessionUserProcessed = -1;
+    if(!sessionUser.equals("null")) sessionUserProcessed = Integer.parseInt(sessionUser); 
+    PublicDataContainer data = databaseService.getUserData(sessionUserProcessed,profile);
     String result = mapper.writeValueAsString(data);
     log.info(result);
     return result;
