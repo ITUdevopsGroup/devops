@@ -107,8 +107,9 @@ public class Controller {
   }
 
   @RequestMapping(value="add_message", method = RequestMethod.GET)
-  public @ResponseBody String addMessag(@RequestParam("user") String userId,@RequestParam("text") String text,@RequestParam("pubDate") int pubDate,@RequestParam("flagged") boolean flagged) throws JsonProcessingException{
+  public @ResponseBody String addMessag(@RequestParam("user") String userId,@RequestParam("text") String text,@RequestParam("pubDate") String pubDate,@RequestParam("flagged") String flagged) throws JsonProcessingException{
     log.info("GET: /add_message");
+    // int dateFormatted = Integer.parseInt(pubDate);
     ResultContainer data =  databaseService.addMessage(userId,text,pubDate,flagged);
     String result = mapper.writeValueAsString(data);
     log.info(result);

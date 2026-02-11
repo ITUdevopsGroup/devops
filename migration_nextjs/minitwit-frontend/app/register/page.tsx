@@ -94,14 +94,10 @@ export default function Register() {
             setErrorText('The two passwords do not match')
             setError(true)
         }
-
-        setShouldFetch(true)
+        if(!error)setShouldFetch(true)
             
 }
 
-function get_user_id(username:string) {
-    return null
-}
 
  return (
     <div>
@@ -149,4 +145,5 @@ function get_user_id(username:string) {
         }
 
     </div>);
-}
+    
+      }
