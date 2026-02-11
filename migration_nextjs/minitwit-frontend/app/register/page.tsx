@@ -2,6 +2,7 @@
 
 import { useRouter,useSearchParams  } from 'next/navigation';
 import { FormEvent,useState} from 'react'
+import { useEffect } from "react";
 
 
 function route(router:any,path:string) {
@@ -11,21 +12,33 @@ function route(router:any,path:string) {
 var host = process.env.host
 var port = process.env.port
 
-
+interface result {
+  status: any;
+  error: any;
+  result: any;
+}
+    var userForm:any = null
+    var emailForm:any = null
+    var passwordForm:any = null
+    var password2Form:any = null
 
 export default function Register() {
 
     const [errorText, setErrorText] = useState("");
-  const [error, setError] = useState(false);
+    const [error, setError] = useState(false);
+    const [shoudldFetch, setShouldFetch] = useState(false);
+    const [dataAPI, setDataAPI] = useState<result>();
+
+
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    var user = formData.get('username')
-    var email = formData.get('email')
-    var password = formData.get('password')
-    var password2 = formData.get('password2')
-    registerUser(user,email,password,password2)
+    userForm = formData.get('username')
+    emailForm = formData.get('email')
+    passwordForm = formData.get('password')
+    password2Form = formData.get('password2')
+    registerUser(userForm,emailForm,passwordForm,password2Form)
   }
 
   const router = useRouter()
@@ -36,14 +49,34 @@ export default function Register() {
   let loggedIn = g.user !="null" ? true : false
   const [registerText, setRegisterText] = useState("");
 
-  async function registerReqest(username:string,email:any,password:string){
+
+  
+      useEffect(() => {
+      if(dataAPI?.result) {alert("Great! You can now sign in.")}
+      else if(dataAPI?.error) {
+        setErrorText(dataAPI?.status)
+        setError(true)
+      }
+    },[dataAPI]);
+  
+      useEffect(() => {
+        if(shoudldFetch) {
+          registerReqest(userForm,emailForm,passwordForm)
+          setShouldFetch(false)
+        }
+    },[shoudldFetch]);
+
+  async function registerReqest(username:any,email:any,password:any){
     let api = await fetch(host +":" + port + "/register?user=" + username + "&email=" + email + "&password=" + password)
+    let apijson = await api.json()
+    setDataAPI(apijson.userData)
+    setShouldFetch(false)
   }
 
   function registerUser(username:any,email:any,password:any,password2:any) {
-    console.log("userdid " + userId + " username "+ username)
     if(userId != "null") route(router,"/timeline?user=" + userId + "&username="+ usernameSession + "&refetch=true")
-    setError(true)
+    setErrorText("")
+    setError(false)
         if(username == undefined ||username == null || username == "") {
             setErrorText('You have to enter a username')
             setError(true)
@@ -61,16 +94,9 @@ export default function Register() {
             setErrorText('The two passwords do not match')
             setError(true)
         }
+
+        setShouldFetch(true)
             
-        else if(get_user_id(username) != null) {
-            setErrorText('The username is already taken')
-            setError(true)
-        }
-        else {
-            setErrorText("")
-            registerReqest(username,email,password)
-            alert("Great! You can now sign in.")
-        }
 }
 
 function get_user_id(username:string) {

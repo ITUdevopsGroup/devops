@@ -92,12 +92,10 @@ export default function Timeline() {
     
   }
     async function getUserTimeLine(){
-    console.log(host +":" + port + "/user?user=" + session.user + "&profile=" + username)
     let api = await fetch(host +":" + port + "/user?user=" + session.user + "&profile=" + username)
     let apijson = await api.json()
     setItems(apijson.data);
     setFollowed(apijson.followed)
-    console.log("user req followed " + followed)
   }
 
   function follow(username:any) {
@@ -174,7 +172,6 @@ export default function Timeline() {
   },[refetchNew]);
 
     useEffect(() => {
-      console.log("followed " + followed)
     evaluateTimeline()
   },[followed]);
 
@@ -202,7 +199,7 @@ export default function Timeline() {
     setUsername(undefined)
     setRefetch(refetchNew ? false : true)
     setItems([])
-    router.push("/timeline")
+    router.push("/")
 
   }
 
