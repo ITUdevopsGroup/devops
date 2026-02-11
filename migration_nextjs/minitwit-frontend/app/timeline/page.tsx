@@ -86,10 +86,10 @@ export default function Timeline() {
   }
 
   function follow(username:any) {
-    console.log("j")
+    alert("You are now following " + username)
   }
   function unfollow(username:any) {
-    console.log("j")
+    alert("You are no longer following " + username)
 
   }
   async function addMessage(event: FormEvent<HTMLFormElement>) {
