@@ -8,30 +8,24 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.devops.itu_minitwit.Database.DatabaseService;
 import com.devops.itu_minitwit.Json.PublicDataContainer;
-import com.devops.itu_minitwit.Json.UserData;
+import com.devops.itu_minitwit.Json.ResultContainer;
 import com.devops.itu_minitwit.Json.UserDataContainer;
-
 import org.apache.logging.log4j.Logger;
-
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
-
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-
 import org.apache.logging.log4j.LogManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.annotation.PostConstruct;
 
 @RestController
 public class Controller {
 
-  private SecureRandom random = new SecureRandom();
+  // private SecureRandom random = new SecureRandom();
   private Base64.Encoder enc = Base64.getEncoder();
   private byte[] salt = new byte[16];
 
@@ -64,13 +58,12 @@ public class Controller {
   }
 
     @RequestMapping(value="register", method = RequestMethod.GET)
-  public @ResponseBody int registerUser(@RequestParam("user") String userId,@RequestParam("email") String email,@RequestParam("password") String password) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException{
+  public @ResponseBody ResultContainer registerUser(@RequestParam("user") String userId,@RequestParam("email") String email,@RequestParam("password") String password) throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException{
     log.info("GET: /register");
     KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
     SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
     byte[] hash = f.generateSecret(spec).getEncoded();
-    if(databaseService.registerNewUser(userId,email,enc.encodeToString(hash))) return 0;
-    return -1;
+    return databaseService.registerNewUser(userId,email,enc.encodeToString(hash));
   }
 
     @RequestMapping(value="spec_user", method = RequestMethod.GET)
@@ -85,6 +78,30 @@ public class Controller {
     String result = mapper.writeValueAsString(data);
     log.info(result);
     return result;
+  }
+
+  @RequestMapping(value="is_followed", method = RequestMethod.GET)
+  public @ResponseBody ResultContainer isFollowed(@RequestParam("user") String userId,@RequestParam("profile") String profile) throws JsonProcessingException{
+    log.info("GET: /is_followed");
+    return databaseService.isFollowed(userId,profile);
+  }
+
+  @RequestMapping(value="follow", method = RequestMethod.GET)
+  public @ResponseBody ResultContainer follow(@RequestParam("user") String userId,@RequestParam("profile") String profile) throws JsonProcessingException{
+    log.info("GET: /follow");
+    return databaseService.follow(userId,profile);
+  }
+
+  @RequestMapping(value="unfollow", method = RequestMethod.GET)
+  public @ResponseBody ResultContainer unfollow(@RequestParam("user") String userId,@RequestParam("profile") String profile) throws JsonProcessingException{
+    log.info("GET: /unfollow");
+    return databaseService.unFollow(userId,profile);
+  }
+
+  @RequestMapping(value="add_message", method = RequestMethod.GET)
+  public @ResponseBody ResultContainer addMessag(@RequestParam("user") String userId,@RequestParam("text") String text,@RequestParam("pubDate") int pubDate,@RequestParam("flagged") boolean flagged) throws JsonProcessingException{
+    log.info("GET: /add_message");
+    return databaseService.addMessage(userId,text,pubDate,flagged);
   }
 
 }
