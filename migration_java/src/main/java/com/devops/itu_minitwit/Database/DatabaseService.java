@@ -240,8 +240,9 @@ public class DatabaseService {
             var conn = DriverManager.getConnection(PATH);
             var pstmt = conn.prepareStatement(FOLLOW)) {
                 conn.setAutoCommit(false);
-                pstmt.setInt(1, whom);
-                pstmt.setString(2, userId);
+                
+                pstmt.setString(1, userId);
+                pstmt.setInt(2, whom);
                 
     
                 pstmt.executeUpdate();
@@ -272,8 +273,8 @@ public class DatabaseService {
             var pstmt = conn.prepareStatement(UNFOLLOW)) {
                 conn.setAutoCommit(false);
                 
-                pstmt.setInt(1, whom);
-                pstmt.setString(2, userId);
+                pstmt.setString(1, userId);
+                pstmt.setInt(2, whom);
     
                 pstmt.executeUpdate();
                 log.info(String.format("Succesfully unfollowed: {}, profileUser: {}", userId,whom));
