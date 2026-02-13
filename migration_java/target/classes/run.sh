@@ -1,0 +1,1 @@
+nohup java -jar  /app/app.jar > out.log  2>&1 &

@@ -1,7 +1,7 @@
 FROM maven:3.9.8-eclipse-temurin-21 AS build
 
 COPY src /app/src
-# COPY minitwit.db /app/minitwit.db
+COPY minitwit.db /app/minitwit.db
 COPY pom.xml /app
 
 WORKDIR /app
@@ -10,10 +10,10 @@ RUN mvn clean install -U
 FROM eclipse-temurin:21
 COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar /app/app.jar
 COPY --from=build /app/target/classes/* /app/
+COPY --from=build /app/minitwit.db /app/minitwit.db 
 
 WORKDIR /app
 RUN chmod -R 777 minitwit.db
-RUN ls -a
 EXPOSE 5001
 ENTRYPOINT java -jar app.jar > /app/out.log
 # docker build --tag 'minitwit_backend' .
