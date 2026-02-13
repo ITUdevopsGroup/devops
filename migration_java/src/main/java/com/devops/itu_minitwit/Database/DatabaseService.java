@@ -68,7 +68,7 @@ public class DatabaseService {
             log.info(String.format("Querying public data of succeded"));
             return result;
         } catch (SQLException e) {
-            log.error(String.format("Querying public data of failed"));
+            log.error(String.format("Querying public data of failed" + " " + e.getMessage()));
             System.err.println(e.getMessage());
         }
         return null;
@@ -108,7 +108,7 @@ public class DatabaseService {
             log.info(String.format("Querying user data of  user: {} succeded", sessionUser));
             return result;
         } catch (SQLException e) {
-            log.error(String.format("Querying user data of  user: {} failed", sessionUser));
+            log.error(String.format("Querying user data of  user: {} failed" + " " + e.getMessage(), sessionUser));
             System.err.println(e.getMessage());
         }
         return null;
@@ -136,7 +136,7 @@ public class DatabaseService {
             conn.close();
             return data;
         } catch (SQLException e) {
-            log.error(String.format("Querying specific user data of  user: {} failed", userId));
+            log.error(String.format("Querying specific user data of  user: {} failed" + " " + e.getMessage(), userId));
             System.err.println(e.getMessage());
         }
         return null;
@@ -161,7 +161,7 @@ public class DatabaseService {
             conn.close();
             return data;
         } catch (SQLException e) {
-            log.error(String.format("Get use id: {} failed", username));
+            log.error(String.format("Get use id: {} failed" + " " + e.getMessage(), username));
             System.err.println(e.getMessage());
         }
         return null;
@@ -191,7 +191,7 @@ public class DatabaseService {
                 conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
-            log.error(String.format("Registration of new user: {}, email: {} failed.", username,email));
+            log.error(String.format("Registration of new user: {}, email: {} failed." + " " + e.getMessage(), username,email));
             return new ResultContainer(new Result(String.format("DB_ERROR"),true,false));
         }
         return new ResultContainer(new Result("OK", false,true));
@@ -219,7 +219,7 @@ public class DatabaseService {
                 conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
-            log.error(String.format("Check of follow status: {}, profileUser: {} failed", sessionUser,profileUser));
+            log.error(String.format("Check of follow status: {}, profileUser: {} failed" + " " + e.getMessage(), sessionUser,profileUser));
             return new ResultContainer(new Result(String.format("DB_ERROR"),true,false));
 
         }
@@ -252,7 +252,7 @@ public class DatabaseService {
                 conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
-            log.error(String.format("Follow {}, profileUser: {} failed", userId,whom));
+            log.error(String.format("Follow {}, profileUser: {} failed " + " " + e.getMessage(), userId,whom));
             return new ResultContainer(new Result(String.format("DB_ERROR"),true,false));
         }
         return new ResultContainer(new Result("OK", false,true));
@@ -283,7 +283,7 @@ public class DatabaseService {
                 conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
-            log.error(String.format("Follow {}, unprofileUser: {} failed", userId,whom));
+            log.error(String.format("Follow {}, unprofileUser: {} failed"  + " " + e.getMessage(), userId,whom));
             return new ResultContainer(new Result(String.format("NOT_EXISTS"),true,false));
         }
         return new ResultContainer(new Result("OK", false,true));
@@ -307,7 +307,7 @@ public class DatabaseService {
                 conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
-            log.error(String.format("Add message failed for: {}", userId));
+            log.error(String.format("Add message failed for: {}" + e.getMessage(), userId));
             return new ResultContainer(new Result(String.format("NOT_EXISTS"),true,false));
         }
         return new ResultContainer(new Result("OK", false,true));
