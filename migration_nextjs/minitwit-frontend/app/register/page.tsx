@@ -10,7 +10,7 @@ function route(router:any,path:string) {
 }
 
 // var host = process.env.host
-var host: "http://localhost"
+var host = "http://localhost"
 var port = process.env.port
 
 interface result {

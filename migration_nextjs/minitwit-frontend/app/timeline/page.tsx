@@ -8,7 +8,7 @@ import Gravatar from 'react-gravatar'
 import { useRouter,useSearchParams,usePathname   } from 'next/navigation';
 
 // var host = process.env.host
-var host: "http://localhost"
+var host =  "http://localhost"
 var port = process.env.port
 interface message {
   messageId: any;
