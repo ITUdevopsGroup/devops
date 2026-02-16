@@ -9,7 +9,8 @@ function route(router:any,path:string) {
   router.push(path)
 }
 
-var host = process.env.host
+var host = "http://localhost"
+// var host = process.env.host
 var port = process.env.port
 
 export default function Login() {

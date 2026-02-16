@@ -9,7 +9,8 @@ function route(router:any,path:string) {
   router.push(path)
 }
 
-var host = process.env.host
+var host = "http://ec2-13-51-198-31.eu-north-1.compute.amazonaws.com"
+// var host = process.env.host
 var port = process.env.port
 
 interface result {
