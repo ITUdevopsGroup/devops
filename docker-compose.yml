@@ -11,6 +11,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_HOST: "ec2-13-60-230-165.eu-north-1.compute.amazonaws.com"
+      NEXT_PUBLIC_API_HOST: "ec2-13-51-198-31.eu-north-1.compute.amazonaws.com"
     depends_on:
       - backend
