@@ -10,10 +10,10 @@ RUN npm ci
 #says copy everything else from the frontend folder into /app so the container gets full source code
 COPY . .
 
-EXPOSE 3001
+EXPOSE 3000
 
 #Tells docker what to run when the container starts
 #npm run dev starts the Next.js development server
 #-H 0.0.0.0 tells Docker to listen on all network interfaces (by default Next.js  it only listens to localhost)
 #-p 3000 tells Next to use port 3000
-CMD ["npm","run","dev","--","-H","0.0.0.0","-p","3001"]
+CMD ["npm","run","dev","--","-H","0.0.0.0","-p","3000"]
