@@ -90,6 +90,7 @@ export default function Timeline() {
 
   async function getPublicTimeLine(){
     refetch = false
+    console.log(host +":" + port)
     let api = await fetch(host +":" + port)
     let apijson = await api.json()
     setItems(apijson.data);
