@@ -3,19 +3,15 @@ services:
     build:
       context: ./migration_java
     ports:
-      - "5001:5001"
-    environment:
-      NEXT_PUBLIC_API_HOST: "http://ec2-13-48-44-225.eu-north-1.compute.amazonaws.com"
-      NEXT_PUBLIC_API_PORT: "5001"
-
+      - "ec2-13-60-193-131.eu-north-1.compute.amazonaws.com:5001:5001"
 
   frontend:
     build:
       context: ./migration_nextjs/minitwit-frontend
     ports:
-      - "3000:3000"
+      - "ec2-13-60-193-131.eu-north-1.compute.amazonaws.com:3001:3001"
     environment:
-      NEXT_PUBLIC_API_HOST: "http://ec2-13-48-44-225.eu-north-1.compute.amazonaws.com"
-      NEXT_PUBLIC_API_PORT: "3000"
+      NEXT_PUBLIC_API_HOST: "http://ec2-13-60-193-131.eu-north-1.compute.amazonaws.com"
+      NEXT_PUBLIC_API_PORT: "5001"
     depends_on:
       - backend
