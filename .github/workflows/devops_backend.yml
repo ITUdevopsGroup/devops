@@ -113,7 +113,6 @@ jobs:
           key: ${{ secrets.VAGRANT }}
           port: 22
           script: |
-            mkdir backend
             ls -a
             docker login -u andersfrimann -p itudevops
             docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_backend:anders-dev --format="{{.ID}}"))
