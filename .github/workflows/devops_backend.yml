@@ -26,9 +26,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-     defaults:
-       run:
-         working-directory: ./migration_java      
+  
 
 
 
@@ -44,6 +42,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      defaults:
+       run:
+         working-directory: ./migration_java    
 
       - name: Copy files
         working-directory: migration_java
