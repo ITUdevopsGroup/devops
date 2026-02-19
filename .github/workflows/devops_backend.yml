@@ -5,6 +5,7 @@ name: Docker
 # separate terms of service, privacy policy, and support
 # documentation.
 
+        
 on:
   schedule:
     - cron: $cron-daily
@@ -37,6 +38,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Copy files
+        working-directory: $$GITHUB_WORKSPACE/migration_java
+        run: cp Dockerfile ../Dockerfile
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
@@ -74,9 +79,6 @@ jobs:
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
         id: build-and-push
-        working-directory: $$GITHUB_WORKSPACE/migration_java
-        run: cp Dockerfile ../Dockerfile
-        
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
           context: .
