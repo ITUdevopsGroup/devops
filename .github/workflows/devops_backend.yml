@@ -7,8 +7,6 @@ name: Docker
 
         
 on:
-  schedule:
-    - cron: $cron-daily
   push:
     branches: [ anders/dev]
     # Publish semver tags as releases.
