@@ -1,21 +1,5 @@
 name: deploy_devops_backend
 
-on:
-  push:
-    branches: [ anders/dev]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ anders/dev] 
-
-env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: registry.hub.docker.com/andersfrimann
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: devops_backend
-
-
-
 jobs:
   build:
 
@@ -38,7 +22,6 @@ jobs:
           key: ${{ secrets.VAGRANT }}
           port: 22
           script: |
-            mkdir backend
             ls -a
             docker login -u andersfrimann -p itudevops
             docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_backend:anders-dev --format="{{.ID}}"))

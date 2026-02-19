@@ -1,20 +1,5 @@
 name: deploy_devops_frontend
 
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-        
-on:
-  push:
-    branches: [ anders/dev]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ anders/dev] 
-
 jobs:
   build:
 
@@ -23,8 +8,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
       id-token: write
 
     steps:
@@ -39,7 +22,6 @@ jobs:
           key: ${{ secrets.VAGRANT }}
           port: 22
           script: |
-            mkdir frontend
             ls -a
             docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev --format="{{.ID}}"))
             docker image pull registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev
