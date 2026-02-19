@@ -4,7 +4,10 @@ name: Docker
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
 # documentation.
-
+defaults:
+  run:
+    shell: bash
+    working-directory: ./migration_java
         
 on:
   push:
@@ -26,10 +29,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    defaults:
-      run:
-      shell: bash
-      working-directory: ./migration_java
+
 
     permissions:
       contents: read
