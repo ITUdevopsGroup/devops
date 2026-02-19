@@ -39,6 +39,7 @@ jobs:
           key: ${{ secrets.VAGRANT }}
           port: 22
           script: |
+            mkdir frontend
             ls -a
             docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev --format="{{.ID}}"))
             docker image pull registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev
