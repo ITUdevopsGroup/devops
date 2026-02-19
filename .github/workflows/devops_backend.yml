@@ -43,13 +43,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      defaults:
-       run:
-         working-directory: ./migration_java    
-
-      - name: Copy files
-        working-directory: migration_java
-        run: cp Dockerfile ../. 
+      - name: change dir
+        run: cd ./migration_java
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
