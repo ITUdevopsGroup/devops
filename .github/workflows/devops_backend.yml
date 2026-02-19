@@ -26,6 +26,10 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    defaults:
+      run:
+      working-directory: migration_java
+
     permissions:
       contents: read
       packages: write
@@ -33,9 +37,7 @@ jobs:
       # with sigstore/fulcio when running outside of PRs.
       id-token: write
 
-       defaults:
-      run:
-        working-directory: migration_java
+
 
     steps:
       - name: Checkout repository
