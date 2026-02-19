@@ -41,7 +41,7 @@ jobs:
 
       - name: Copy files
         working-directory: $$GITHUB_WORKSPACE/migration_java
-        run: cp Dockerfile ../Dockerfile
+        run: cp Dockerfile ../.
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
