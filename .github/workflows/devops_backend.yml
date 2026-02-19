@@ -1,11 +1,5 @@
-name: Docker
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-        
+name: build_devops_backend
+ 
 on:
   push:
     branches: [ anders/dev]
@@ -19,8 +13,6 @@ env:
   REGISTRY: registry.hub.docker.com/andersfrimann
   # github.repository as <account>/<repo>
   IMAGE_NAME: devops_backend
-
-
 
 jobs:
   build:

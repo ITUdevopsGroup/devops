@@ -1,11 +1,5 @@
-name: Docker
+name: deploy_devops_backend
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-        
 on:
   push:
     branches: [ anders/dev]
@@ -30,25 +24,23 @@ jobs:
     permissions:
       contents: read
       packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
       id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-  - name: File commands
-    uses: appleboy/ssh-action@v1
-    with:
-      host: ec2-13-51-198-31.eu-north-1.compute.amazonaws.com
-      username: ubuntu
-      key: ${{ secrets.VAGRANT }}
-      port: 22
-      script: |
-        ls -a
-        docker login -u andersfrimann -p itudevops
-        docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_backend:anders-dev --format="{{.ID}}"))
-        docker image pull registry.hub.docker.com/andersfrimann/devops_backend:anders-dev
-        docker run -d -p 5001:5001 registry.hub.docker.com/andersfrimann/devops_backend:anders-dev
+      - name: File commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ec2-13-51-198-31.eu-north-1.compute.amazonaws.com
+          username: ubuntu
+          key: ${{ secrets.VAGRANT }}
+          port: 22
+          script: |
+            ls -a
+            docker login -u andersfrimann -p itudevops
+            docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_backend:anders-dev --format="{{.ID}}"))
+            docker image pull registry.hub.docker.com/andersfrimann/devops_backend:anders-dev
+            docker run -d -p 5001:5001 registry.hub.docker.com/andersfrimann/devops_backend:anders-dev
 
