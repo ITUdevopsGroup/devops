@@ -28,7 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-      working-directory: migration_java
+      shell: bash
+      working-directory: ./migration_java
 
     permissions:
       contents: read
