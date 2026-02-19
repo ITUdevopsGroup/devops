@@ -16,7 +16,7 @@ on:
 
 env:
   # Use docker.io for Docker Hub if empty
-  REGISTRY: hub.docker.com/repository/docker/andersfrimann/devops
+  REGISTRY: index.docker.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: devops_backend
 
@@ -39,7 +39,7 @@ jobs:
 
       - name: Copy files
         working-directory: migration_java
-        run: cp Dockerfile ../.
+        run: cp Dockerfile ../. 
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
