@@ -20,7 +20,7 @@ env:
   REGISTRY: andersfrimann/devops
   # github.repository as <account>/<repo>
   IMAGE_NAME: devops_backend
-  WORK_DIR: 
+
 
 
 jobs:
