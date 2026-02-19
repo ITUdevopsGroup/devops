@@ -17,7 +17,7 @@ on:
 
 env:
   # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
+  REGISTRY: andersfrimann/devops
   # github.repository as <account>/<repo>
   IMAGE_NAME: devops_backend
   WORK_DIR: 
@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
