@@ -1,4 +1,4 @@
-name: build_devops_backend
+name: build_devops_frontend
 
 on:
   push:

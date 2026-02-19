@@ -1,5 +1,13 @@
 name: deploy_devops_frontend
 
+on:
+  push:
+    branches: [ anders/dev]
+    # Publish semver tags as releases.
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ anders/dev] 
+
 jobs:
   build:
 
