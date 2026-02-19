@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Copy files
-        working-directory: $$GITHUB_WORKSPACE/migration_java
+        working-directory: migration_java
         run: cp Dockerfile ../.
 
       # Install the cosign tool except on PR
