@@ -33,6 +33,10 @@ jobs:
       # with sigstore/fulcio when running outside of PRs.
       id-token: write
 
+       defaults:
+      run:
+        working-directory: migration_java
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -76,7 +80,6 @@ jobs:
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
-        working-directory: migration_java
         id: build-and-push
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
