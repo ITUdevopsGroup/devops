@@ -71,7 +71,7 @@ jobs:
         id: build-and-push
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
-          context: ./migration_nextjs/minitwit-frontend
+          context: ./devops_frontend
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -116,6 +116,8 @@ jobs:
           port: 22
           script: |
             ls -a
-            docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev --format="{{.ID}}"))
+            docker stop $(cat devops_frontend.pid)
+            docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_frontend* --format="{{.ID}}"))
+            rm devops_frontend.pid
             docker image pull registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev
-            docker run -d -p 3000:3000 registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev
+            docker run -d -p 3000:3000 registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev > devops_frontend.pid
