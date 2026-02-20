@@ -107,7 +107,7 @@ jobs:
 
       - name: Extract branch name
         shell: bash
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" | tr / -  #>> $GITHUB_OUTPUT
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" | tr / - 
         id: extract_branch
 
       - name: File commands
@@ -118,12 +118,11 @@ jobs:
           key: ${{ secrets.VAGRANT }}
           port: 22
           script: |
-            ls -a
             docker login -u andersfrimann -p itudevops
             docker stop $(cat devops_backend.pid)
             docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_backend* --format="{{.ID}}"))
             rm devops_backend.pid
-            docker image rm -f registry.hub.docker.com/andersfrimann/devops_backend:anders-dev
+            docker image rm -f registry.hub.docker.com/andersfrimann/devops_backend:${{ steps.extract_branch.outputs.branch }}
             docker rmi -f $(docker images -a --filter=dangling=true -q)
-            docker image pull registry.hub.docker.com/andersfrimann/devops_backend:anders-dev
-            docker run -d -p 5001:5001 registry.hub.docker.com/andersfrimann/devops_backend:anders-dev > devops_backend.pid
+            docker image pull registry.hub.docker.com/andersfrimann/devops_backend:${{ steps.extract_branch.outputs.branch }}
+            docker run -d -p 5001:5001 registry.hub.docker.com/andersfrimann/devops_backend:${{ steps.extract_branch.outputs.branch }} > devops_backend.pid
