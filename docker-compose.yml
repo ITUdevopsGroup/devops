@@ -1,13 +1,13 @@
 services:
   backend:
     build:
-      context: ./migration_java
+      context: ./devops_backend
     ports:
       - "5001:5001"
 
   frontend:
     build:
-      context: ./migration_nextjs/minitwit-frontend
+      context: ./devops_frontend
     ports:
       - "3000:3000"
     environment:
