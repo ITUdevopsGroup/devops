@@ -123,7 +123,7 @@ jobs:
             docker stop $(cat devops_frontend.pid)
             docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_frontend* --format="{{.ID}}"))
             rm devops_frontend.pid
-            docker image rm -f registry.hub.docker.com/andersfrimann/devops_frontend:"${{steps.extract_branch.outputs.branch}}"
+            docker image rm -f registry.hub.docker.com/andersfrimann/devops_frontend:{{steps.extract_branch.outputs.branch}}
             docker rmi -f $(docker images -a --filter=dangling=true -q)
-            docker image pull registry.hub.docker.com/andersfrimann/devops_frontend:"${{steps.extract_branch.outputs.branch}}"
-            docker run -d -p 3000:3000 registry.hub.docker.com/andersfrimann/devops_frontend:"${{ steps.extract_branch.outputs.branch}}" > devops_frontend.pid
+            docker image pull registry.hub.docker.com/andersfrimann/devops_frontend:{{steps.extract_branch.outputs.branch}}
+            docker run -d -p 3000:3000 registry.hub.docker.com/andersfrimann/devops_frontend:{{ steps.extract_branch.outputs.branch}} > devops_frontend.pid
