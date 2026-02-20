@@ -107,6 +107,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" | tr / - #>> $GITHUB_OUTPUT
+        id: extract_branch
+
       - name: File commands
         uses: appleboy/ssh-action@v1
         with:
@@ -121,6 +126,5 @@ jobs:
             rm devops_frontend.pid
             docker image rm -f registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev
             docker rmi -f $(docker images -a --filter=dangling=true -q)
-
             docker image pull registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev
             docker run -d -p 3000:3000 registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev > devops_frontend.pid
