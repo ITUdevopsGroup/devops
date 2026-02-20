@@ -2,11 +2,11 @@ name: build_and_deploy_devops_frontend
 
 on:
   push:
-    branches: [ anders/dev ]
+    branches: [ $default-branch ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
   pull_request:
-    branches: [ anders/dev ]
+    branches: [ $default-branch ]
 
 env:
   # Use docker.io for Docker Hub if empty
