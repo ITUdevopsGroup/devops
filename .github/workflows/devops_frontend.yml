@@ -120,5 +120,7 @@ jobs:
             docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_frontend* --format="{{.ID}}"))
             rm devops_frontend.pid
             docker image rm -f registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev
+            docker rmi -f $(docker images -a --filter=dangling=true -q)
+
             docker image pull registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev
             docker run -d -p 3000:3000 registry.hub.docker.com/andersfrimann/devops_frontend:anders-dev > devops_frontend.pid
