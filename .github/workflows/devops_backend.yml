@@ -1,4 +1,4 @@
-name: build_and_deploy_devops_backend
+name: build_and_deploy
  
 on:
   push:
@@ -124,7 +124,13 @@ jobs:
             docker stop $(cat devops_backend.pid)
             docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_backend* --format="{{.ID}}"))
             rm devops_backend.pid
-            docker image rm -f registry.hub.docker.com/andersfrimann/devops_backend:${{steps.extract_branch.outputs.branch}}
             docker system prune -a -f
+            docker image rm -f registry.hub.docker.com/andersfrimann/devops_backend:${{steps.extract_branch.outputs.branch}}
             docker image pull registry.hub.docker.com/andersfrimann/devops_backend:${{steps.extract_branch.outputs.branch}}
             docker run -d -p 5001:5001 registry.hub.docker.com/andersfrimann/devops_backend:${{ steps.extract_branch.outputs.branch}} > devops_backend.pid
+
+            docker stop $(cat devops_frontend.pid)
+            rm devops_frontend.pid
+            docker image rm -f registry.hub.docker.com/andersfrimann/devops_frontend:${{steps.extract_branch.outputs.branch}}
+            docker image pull registry.hub.docker.com/andersfrimann/devops_frontend:${{steps.extract_branch.outputs.branch}}
+            docker run -d -p 3000:3000 registry.hub.docker.com/andersfrimann/devops_frontend:${{ steps.extract_branch.outputs.branch}} > devops_frontend.pid
