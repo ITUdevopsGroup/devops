@@ -4,6 +4,11 @@ services:
       context: ./devops_backend
     ports:
       - "5001:5001"
+    volumes:
+      - minitwit_db:/data
+    environment:
+      
+      MINITWIT_DB_PATH: /data/minitwit.db
 
   frontend:
     build:
@@ -14,3 +19,5 @@ services:
       NEXT_PUBLIC_API_HOST: "ec2-13-51-198-31.eu-north-1.compute.amazonaws.com"
     depends_on:
       - backend
+volumes:
+  minitwit_db:

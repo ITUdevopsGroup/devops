@@ -1,22 +1,20 @@
 FROM maven:3.9.8-eclipse-temurin-21 AS build
-
-COPY src /app/src
-COPY minitwit.db /app/minitwit.db
-COPY pom.xml /app
-
 WORKDIR /app
-RUN mvn clean install -U
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21
-COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar /app/app.jar
-COPY --from=build /app/target/classes/* /app/
-COPY --from=build /app/minitwit.db /app/minitwit.db 
-
-
 WORKDIR /app
-RUN chmod -R 777 minitwit.db
+
+COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar /app/app.jar
+
+# seed DB (only used if volume is empty)
+COPY minitwit.db /app/seed/minitwit.db
+
+# entrypoint that seeds then starts java
+COPY seed-db.sh /app/seed-db.sh
+RUN chmod +x /app/seed-db.sh
+
 EXPOSE 5001
-ENTRYPOINT java -jar app.jar > out.log
-# docker build --tag 'minitwit_backend' .
-# docker run -d -p 5001:5001 'minitwit_backend'
-# docker exec -it <container id>  bash
+ENTRYPOINT ["/app/seed-db.sh"]

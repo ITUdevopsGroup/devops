@@ -255,7 +255,7 @@ export default function Timeline() {
 
  return (
     <div>
-      <h1>MiniTwit</h1> 
+      <h1>MiniTwit Alp Update</h1> 
       <div className="navigation">
         {loggedIn ? (
           <p> 
