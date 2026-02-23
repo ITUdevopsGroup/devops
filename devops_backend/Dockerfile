@@ -14,7 +14,7 @@ COPY --from=build /app/minitwit.db /app/minitwit.db
 
 
 WORKDIR /app
-RUN --mount=type=bind,source=/home/ubuntu/logs/devops_backend,target=/logs/
+RUN --mount=type=volume,src=/home/ubuntu/logs/devops_backend,dst=/app/logs/
 RUN chmod -R 777 minitwit.db
 EXPOSE 5001
 ENTRYPOINT java -jar app.jar 1> >(tee /logs/info.log) 2> >(tee /logs/error.log 2>&2)
