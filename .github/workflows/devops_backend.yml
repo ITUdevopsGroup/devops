@@ -127,5 +127,4 @@ jobs:
             docker image rm -f registry.hub.docker.com/andersfrimann/devops_backend:${{steps.extract_branch.outputs.branch}}
             docker system prune -a -f
             docker image pull registry.hub.docker.com/andersfrimann/devops_backend:${{steps.extract_branch.outputs.branch}}
-            docker run --mount type=bind=volume,src=/home/ubuntu/logs/devops_backend,dst=/app/logs/
-            docker run -d -p 5001:5001 registry.hub.docker.com/andersfrimann/devops_backend:${{ steps.extract_branch.outputs.branch}} > devops_backend.pid
+            docker run --mount type=bind=volume,src=/home/ubuntu/logs/devops_backend,dst=/app/logs/ -d -p 5001:5001 registry.hub.docker.com/andersfrimann/devops_backend:${{ steps.extract_branch.outputs.branch}} > devops_backend.pid
