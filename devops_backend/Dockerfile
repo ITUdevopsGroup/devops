@@ -16,7 +16,7 @@ COPY --from=build /app/minitwit.db /app/minitwit.db
 WORKDIR /app
 RUN chmod -R 777 minitwit.db
 EXPOSE 5001
-ENTRYPOINT java -jar app.jar > out.log  2>&1 &
+ENTRYPOINT java -jar app.jar > out.log 2>&1 &
 # docker build --tag 'minitwit_backend' .
 # docker run -d -p 5001:5001 'minitwit_backend'
 # docker exec -it <container id>  bash
