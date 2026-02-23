@@ -1,7 +1,5 @@
 FROM maven:3.9.8-eclipse-temurin-21 AS build
 
-VOLUME /home/ubuntu/logs logs
-
 COPY src /app/src
 COPY minitwit.db /app/minitwit.db
 COPY pom.xml /app
@@ -16,9 +14,10 @@ COPY --from=build /app/minitwit.db /app/minitwit.db
 
 
 WORKDIR /app
+RUN --mount=type=bind,source=/home/ubuntu/logs/devops_backend,target=/logs/
 RUN chmod -R 777 minitwit.db
 EXPOSE 5001
-ENTRYPOINT java -jar app.jar 1> >(tee /logs/devops_backend/info.log) 2> >(tee /logs/devops_backend/error.log 2>&2)
+ENTRYPOINT java -jar app.jar 1> >(tee /logs/info.log) 2> >(tee /logs/error.log 2>&2)
 # docker build --tag 'minitwit_backend' .
 # docker run -d -p 5001:5001 'minitwit_backend'
 # docker exec -it <container id>  bash
