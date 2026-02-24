@@ -1,6 +1,24 @@
-/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/Database/DatabaseService.java
-/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/Json/PublicDataContainer.java
-/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/App.java
-/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/Controller/Controller.java
-/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/WebConfig.java
-/home/alp/Desktop/devops/migration_java/src/main/java/com/devops/itu_minitwit/Json/PublicDataRecord.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Json/Result.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Json/UserDataContainer.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Controller/FllwsController.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Controller/Controller.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Controller/MsgsController.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Json/ResultContainer.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Controller/ApiErrorHandler.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/WebConfig.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/store/Store.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/dto/FollowAction.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Controller/PingController.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Json/PublicDataContainer.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/dto/MessageResponse.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Database/DatabaseService.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/dto/RegisterRequest.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Controller/SimulatorAuthFilter.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/dto/PostMessage.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/store/InMemoryStore.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/App.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Controller/LatestController.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Controller/RegisterController.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Json/UserData.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/Json/PublicDataRecord.java
+/Users/alp/Desktop/ITU Coding/DevOps/devops_backend/src/main/java/com/devops/itu_minitwit/store/SqliteStore.java
