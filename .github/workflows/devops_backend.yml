@@ -121,11 +121,26 @@ jobs:
           port: 22
           script: |
             docker login -u andersfrimann -p itudevops
-            docker stop $(cat devops_backend.pid)
-            docker rm $(docker stop $(docker ps -a -q --filter ancestor=registry.hub.docker.com/andersfrimann/devops_backend* --format="{{.ID}}"))
-            rm devops_backend.pid
-            docker image rm -f registry.hub.docker.com/andersfrimann/devops_backend:${{steps.extract_branch.outputs.branch}}
-            docker system prune -a -f
-            docker image pull registry.hub.docker.com/andersfrimann/devops_backend:${{steps.extract_branch.outputs.branch}}
-            docker run -d -p 5001:5001 registry.hub.docker.com/andersfrimann/devops_backend:${{ steps.extract_branch.outputs.branch}} > devops_backend.pid
-            
+            set -e
+
+            IMAGE="registry.hub.docker.com/andersfrimann/devops_backend:${{ steps.extract_branch.outputs.branch }}"
+            CONTAINER="devops_backend"
+
+            echo "Pulling $IMAGE"
+            docker pull "$IMAGE"
+
+            docker stop "$CONTAINER" || true
+            docker rm "$CONTAINER" || true
+
+            # create volume if not exists (safe)
+            docker volume create minitwit_db >/dev/null
+
+            docker run -d \
+              --name "$CONTAINER" \
+              -p 5001:5001 \
+              -e MINITWIT_DB_PATH=/data/minitwit.db \
+              -v minitwit_db:/data \
+              --restart unless-stopped \
+              "$IMAGE"
+
+            docker ps --filter "name=$CONTAINER"
