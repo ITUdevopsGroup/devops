@@ -32,10 +32,14 @@ public class DatabaseService {
     
 
     private static final Logger log = LogManager.getLogger();
-    private static final String DB_FILE =
-        System.getenv().getOrDefault("MINITWIT_DB_PATH", "/data/minitwit.db");
+    private static final String DEFAULT_DB_PATH = "minitwit.db"; // local dev fallback
 
-    private static final String PATH = "jdbc:sqlite:" + DB_FILE;
+    private static String jdbcUrl() {
+    String filePath = System.getenv().getOrDefault("MINITWIT_DB_PATH", DEFAULT_DB_PATH);
+    // ensure jdbc:sqlite:<file>
+    if (filePath.startsWith("jdbc:sqlite:")) return filePath;
+    return "jdbc:sqlite:" + filePath;
+    }
 
     public DatabaseService() {
     }
@@ -43,20 +47,19 @@ public class DatabaseService {
     public static Connection connect() {
 
         try (
-            Connection conn = DriverManager.getConnection(PATH)) {
+            Connection conn = DriverManager.getConnection(jdbcUrl())) {
             log.info("Connection to SQLite has been established.");
             return conn;
         } catch (SQLException e) {
-            log.error("DB connection failed to {}: {}", PATH, e.getMessage());
-            return null;
+            log.error(e.getMessage());
         }
-       
+        return null;
     }
 
     public PublicDataContainer getPublicData() {
         log.info("Querying public data records");
         try (
-            Connection conn = DriverManager.getConnection(PATH);
+            Connection conn = DriverManager.getConnection(jdbcUrl());
             var stmt = conn.createStatement();
             var rs = stmt.executeQuery(PUBLIC_SQL)) {
             ArrayList<PublicDataRecord> data = new ArrayList<PublicDataRecord>();
@@ -92,7 +95,7 @@ public class DatabaseService {
 
 
         try (
-            var conn = DriverManager.getConnection(PATH);
+            var conn = DriverManager.getConnection(jdbcUrl());
             var pstmt = conn.prepareStatement(USER_SQL)) {
             pstmt.setInt(1, userdata.getUserData().getUserId());
             pstmt.setInt(2, userdata.getUserData().getUserId());
@@ -122,7 +125,7 @@ public class DatabaseService {
 
     log.info("Querying user data records for user: " + userId);
         try (
-            var conn = DriverManager.getConnection(PATH);
+            var conn = DriverManager.getConnection(jdbcUrl());
             var pstmt = conn.prepareStatement(SPECIFIC_USER__SQL)) {
             pstmt.setString(1, userId);
 
@@ -150,7 +153,7 @@ public class DatabaseService {
 
         log.info("Get use id: " + username);
         try (
-            var conn = DriverManager.getConnection(PATH);
+            var conn = DriverManager.getConnection(jdbcUrl());
             var pstmt = conn.prepareStatement(GET_USER_ID)) {
             pstmt.setString(1, username);
 
@@ -182,7 +185,7 @@ public class DatabaseService {
         }
 
         try (
-            var conn = DriverManager.getConnection(PATH);
+            var conn = DriverManager.getConnection(jdbcUrl());
             var pstmt = conn.prepareStatement(REGISTER_SQL)) {
                 conn.setAutoCommit(false);
                 pstmt.setString(1, username);
@@ -208,7 +211,7 @@ public class DatabaseService {
         
         boolean result = false;
         try (
-            var conn = DriverManager.getConnection(PATH);
+            var conn = DriverManager.getConnection(jdbcUrl());
             var pstmt = conn.prepareStatement(IS_FOLLOWED)) {
                 conn.setAutoCommit(false);
                 pstmt.setInt(1, sessionUser);
@@ -241,7 +244,7 @@ public class DatabaseService {
         }
 
         try (
-            var conn = DriverManager.getConnection(PATH);
+            var conn = DriverManager.getConnection(jdbcUrl());
             var pstmt = conn.prepareStatement(FOLLOW)) {
                 conn.setAutoCommit(false);
                 
@@ -273,7 +276,7 @@ public class DatabaseService {
         }
 
         try (
-            var conn = DriverManager.getConnection(PATH);
+            var conn = DriverManager.getConnection(jdbcUrl());
             var pstmt = conn.prepareStatement(UNFOLLOW)) {
                 conn.setAutoCommit(false);
                 
@@ -297,7 +300,7 @@ public class DatabaseService {
             log.info("Add message for user: " + userId);
 
             try (
-            var conn = DriverManager.getConnection(PATH);
+            var conn = DriverManager.getConnection(jdbcUrl());
             var pstmt = conn.prepareStatement(ADD_MESSAGE)) {
                 conn.setAutoCommit(false);
                 pstmt.setString(1, userId);
