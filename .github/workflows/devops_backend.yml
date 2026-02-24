@@ -129,10 +129,18 @@ jobs:
             echo "Pulling $IMAGE"
             docker pull "$IMAGE"
 
+            # Stop/remove our named container if it exists
             docker stop "$CONTAINER" || true
             docker rm "$CONTAINER" || true
 
-            # create volume if not exists (safe)
+            # Stop/remove any container that is currently using host port 5001
+            OLD_5001="$(docker ps -q --filter publish=5001)"
+            if [ -n "$OLD_5001" ]; then
+              docker stop $OLD_5001 || true
+              docker rm $OLD_5001 || true
+            fi
+
+            # Create volume if missing
             docker volume create minitwit_db >/dev/null
 
             docker run -d \
