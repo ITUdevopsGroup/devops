@@ -32,7 +32,10 @@ public class DatabaseService {
     
 
     private static final Logger log = LogManager.getLogger();
-    private static final String PATH = "jdbc:sqlite:minitwit.db";
+    private static final String DB_FILE =
+        System.getenv().getOrDefault("MINITWIT_DB_PATH", "/data/minitwit.db");
+
+    private static final String PATH = "jdbc:sqlite:" + DB_FILE;
 
     public DatabaseService() {
     }
@@ -44,9 +47,10 @@ public class DatabaseService {
             log.info("Connection to SQLite has been established.");
             return conn;
         } catch (SQLException e) {
-            log.error(e.getMessage());
+            log.error("DB connection failed to {}: {}", PATH, e.getMessage());
+            return null;
         }
-        return null;
+       
     }
 
     public PublicDataContainer getPublicData() {
