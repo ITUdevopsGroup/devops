@@ -177,7 +177,7 @@ export default function Register() {
             <div className="mt-4  w-96">
               <div>{registerText}</div>
               {registerText == "" ? (
-                <h2 className="text-lg mb-4 mt-4">
+                <h2 className="text-sm mb-1 italic opacity-30 mt-4">
                   Please fill out form to sign up
                 </h2>
               ) : (
@@ -247,7 +247,7 @@ export default function Register() {
                   </dl>
 
                   <input
-                    className="cursor-pointer w-full h-10 !rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:!bg-[#377c72] active:scale-[0.99]"
+                    className="cursor-pointer w-full h-10 !rounded-lg !border-0 bg-blue-600 px-4 py-2 text-white font-medium hover:!bg-[#377c72] active:scale-[0.99]"
                     type="submit"
                     value="Sign Up"
                   />
