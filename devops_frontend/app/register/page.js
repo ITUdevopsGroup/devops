@@ -111,8 +111,8 @@ export default function Register() {
   }
 
   return (
-    <div className="w-full justify-center flex p-10 ">
-      <div className="w-1/2 bg-white py-6 px-10 rounded-3xl">
+    <div className="w-full justify-center items-center  h-screen flex p-4 sm:p-10 ">
+      <div className="lg:w-1/2 w-full bg-white py-6 px-4 lg:px-10 rounded-3xl">
         <div className="justify-center  ">
           <h1 className=" rounded-sm text-4xl font-semibold  mt-4 text-[#377c72]">
             MiniTwit
