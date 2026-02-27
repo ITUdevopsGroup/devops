@@ -16,6 +16,5 @@ COPY minitwit.db /app/seed/minitwit.db
 COPY seed-db.sh /app/seed-db.sh
 
 RUN chmod +x /app/seed-db.sh
-# delete this comment
 EXPOSE 5001
 ENTRYPOINT ["/app/seed-db.sh"]
