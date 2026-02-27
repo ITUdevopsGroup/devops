@@ -7,12 +7,14 @@ services:
     volumes:
       - minitwit_db:/data
     environment:
-      
       MINITWIT_DB_PATH: /data/minitwit.db
 
   frontend:
     build:
       context: ./devops_frontend
+      args:
+        NEXT_PUBLIC_API_HOST: "http://ec2-13-51-198-31.eu-north-1.compute.amazonaws.com"
+        NEXT_PUBLIC_API_PORT: "5001"
     ports:
       - "3000:3000"
     environment:
