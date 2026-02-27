@@ -247,7 +247,7 @@ export default function Register() {
                   </dl>
 
                   <input
-                    className="cursor-pointer w-full h-10 !rounded-lg !border-0 bg-blue-600 px-4 py-2 text-white font-medium hover:!bg-[#377c72] active:scale-[0.99]"
+                    className="cursor-pointer w-full h-10 rounded-lg! border-0! bg-blue-600 px-4 py-2 text-white font-medium hover:bg-[#377c72]! active:scale-[0.99]"
                     type="submit"
                     value="Sign Up"
                   />

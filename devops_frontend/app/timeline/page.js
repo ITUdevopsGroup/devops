@@ -271,7 +271,7 @@ export default function Timeline() {
           </dl>
           <div className="">
             <input
-              className="mt-2 mb-4 ml-1 !rounded-md w-30 h-10"
+              className="mt-2 mb-4 ml-1  rounded-md! w-30 h-10"
               type="submit"
               value="Share"
             ></input>{" "}
