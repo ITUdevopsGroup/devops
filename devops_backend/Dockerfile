@@ -14,7 +14,8 @@ COPY minitwit.db /app/seed/minitwit.db
 
 # entrypoint that seeds then starts java
 COPY seed-db.sh /app/seed-db.sh
-RUN chmod +x /app/seed-db.sh
 
+RUN chmod +x /app/seed-db.sh
+# delete this comment
 EXPOSE 5001
 ENTRYPOINT ["/app/seed-db.sh"]
