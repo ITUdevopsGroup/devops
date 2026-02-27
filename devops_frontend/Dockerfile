@@ -10,6 +10,10 @@ RUN npm ci
 #says copy everything else from the frontend folder into /app so the container gets full source code
 COPY . .
 RUN npm run build
+ARG NEXT_PUBLIC_API_HOST
+ARG NEXT_PUBLIC_API_PORT
+ENV NEXT_PUBLIC_API_HOST=$NEXT_PUBLIC_API_HOST
+ENV NEXT_PUBLIC_API_PORT=$NEXT_PUBLIC_API_PORT
 EXPOSE 3000
 
 #Tells docker what to run when the container starts
