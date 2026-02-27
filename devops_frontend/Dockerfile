@@ -9,7 +9,7 @@ RUN npm ci
 
 #says copy everything else from the frontend folder into /app so the container gets full source code
 COPY . .
-RUN npm run
+RUN npm run build
 EXPOSE 3000
 
 #Tells docker what to run when the container starts
