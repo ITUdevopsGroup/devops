@@ -7,8 +7,10 @@ function route(router, path) {
   router.push(path);
 }
 
-const host = process.env.NEXT_PUBLIC_API_HOST;
-const port = process.env.NEXT_PUBLIC_API_PORT;
+// const host = process.env.NEXT_PUBLIC_API_HOST;
+// const port = process.env.NEXT_PUBLIC_API_PORT;
+var host = process.env.host
+var port = process.env.port
 
 export default function Login() {
   const [userName, setUserName] = useState("");

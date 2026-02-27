@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 import Gravatar from "react-gravatar";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
-const host = process.env.NEXT_PUBLIC_API_HOST;
-const port = process.env.NEXT_PUBLIC_API_PORT;
+// const host = process.env.NEXT_PUBLIC_API_HOST;
+// const port = process.env.NEXT_PUBLIC_API_PORT;
+var host = process.env.host
+var port = process.env.port
 
 function gravatar_url(email, size = 80) {
   let emailFormat = email.trim().toLowerCase() + "?d=identicon&s=" + size;
