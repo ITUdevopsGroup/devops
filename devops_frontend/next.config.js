@@ -5,7 +5,7 @@ const nextConfig = {
   reactStrictMode: false,
   env: {
     host: "http://ec2-13-51-198-31.eu-north-1.compute.amazonaws.com",
-    port: "5001",
+    port: "32332",
     portClient: "3000",
   },
 };
