@@ -119,7 +119,7 @@ jobs:
       - name: copy file via ssh password
         uses: appleboy/scp-action@master
         with:
-          host: ${{ env.HOST }}
+          host: ${{ env.HOST}}
           username: ${{ env.USER }}
           key: ${{ secrets.VAGRANT }}
           port: ${{ secrets.PORT }}
