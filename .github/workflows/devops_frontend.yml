@@ -113,8 +113,6 @@ jobs:
           release: 'devops-frontend-0.1.0'
           namespace: 'default'
           chart: './helm/devops-frontend'
-          values: |
-            name: devops-frontend
 
       - name: copy file via ssh password
         uses: appleboy/scp-action@master
