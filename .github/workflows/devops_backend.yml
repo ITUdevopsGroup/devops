@@ -29,10 +29,13 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
-
-      - name: Run Java tests
-        run: ./mvnw test
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.9.8
+      - name: Test backend
         working-directory: ./devops_backend
+        run: mvn -B test
 
   test-api:
     runs-on: ubuntu-latest
@@ -63,12 +66,12 @@ jobs:
 
       - name: Install Python packages
         run: pip install requests
-      - name: Install Python packages 2
-        run: pip install sqlite3
+
       - name: Run simulator API tests
         run: python test.py
 
   build:
+    needs: [test-backend, test-api]
     runs-on: ubuntu-latest
 
     permissions:
@@ -143,8 +146,9 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
   deploy:
+    needs: [build, test-backend, test-api]
+    if: ${{ success() }}
     runs-on: ubuntu-latest
-    needs: build
 
     permissions:
       contents: read
