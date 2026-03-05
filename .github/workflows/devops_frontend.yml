@@ -2,12 +2,12 @@ name: build_and_deploy_devops_frontend
 
 on:
   push:
-    branches: [alpMerge2]
+    branches: [main]
     # Publish semver tags as releases.
     tags: ["v*.*.*"]
   pull_request:
     branches:
-      [alpMerge2]
+      [main]
       # branches: [ $default-branch ]
 env:
   # Use docker.io for Docker Hub if empty
