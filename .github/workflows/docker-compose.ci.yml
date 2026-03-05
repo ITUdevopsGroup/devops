@@ -1,0 +1,13 @@
+services:
+  backend:
+    build:
+      context: ./devops_backend
+    ports:
+      - "5001:5001"
+    environment:
+      MINITWIT_DB_PATH: /data/minitwit.db
+    volumes:
+      - minitwit_db:/data
+
+volumes:
+  minitwit_db:
