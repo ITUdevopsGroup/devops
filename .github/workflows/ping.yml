@@ -1,0 +1,12 @@
+name: ping
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "ping from $GITHUB_REPOSITORY on $GITHUB_REF"
