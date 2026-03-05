@@ -1,14 +1,15 @@
 name: build_and_deploy_devops_backend
- 
+
 on:
   push:
-    # branches: [ $default-branch ]
-    branches: [ alpMerge2 ]
+    branches: [$default-branch]
+    #branches: [alpMerge2]
     # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+    tags: ["v*.*.*"]
   pull_request:
-   branches: [ alpMerge2 ]
-    # branches: [ $default-branch ]
+    #branches: [alpMerge2]
+
+    branches: [$default-branch]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -17,10 +18,59 @@ env:
   IMAGE_NAME: devops_backend
 
 jobs:
-  build:
-
+  #testing with our test.py and minitwit_sim_api_test.py files which is currently located at the root of out repo
+  test-backend:
     runs-on: ubuntu-latest
-  
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Run Java tests
+        run: ./mvnw test
+        working-directory: ./devops_backend
+
+  test-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Start backend i the background
+        run: ./mvnw spring-boot:run &
+        working-directory: ./devops_backend
+
+      - name: wait for springboot to start
+        run: |
+          for i in {1..30}; do
+            curl -s http://127.0.0.1:5001/latest && break
+            sleep 2
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Python packages
+        run: pip install requests
+      - name: Install Python packages 2
+        run: pip install sqlite3
+      - name: Run simulator API tests
+        run: python test.py
+
+  build:
+    runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
@@ -38,7 +88,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
         with:
-          cosign-release: 'v2.2.4'
+          cosign-release: "v2.2.4"
 
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache
@@ -55,7 +105,6 @@ jobs:
           registry: registry.hub.docker.com
           username: andersfrimann
           password: itudevops
-
 
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
@@ -94,10 +143,9 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
   deploy:
-
     runs-on: ubuntu-latest
     needs: build
-  
+
     permissions:
       contents: read
       packages: write
