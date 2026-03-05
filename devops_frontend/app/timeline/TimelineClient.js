@@ -34,6 +34,7 @@ export default function Timeline() {
   const [followed, setFollowed] = useState(false);
   const [shouldFollow, setShouldFollow] = useState(false);
   const [shouldUnFollow, setShouldUnFollow] = useState(false);
+  const [totalMessages, setTotalMessages] = useState(null);
 
   const params = useSearchParams();
   const router = useRouter();
@@ -75,13 +76,58 @@ export default function Timeline() {
     setItems([]);
     router.push(path);
   }
-
+  async function getTotalMessages() {
+    try {
+      const res = await fetch(host + ":" + port + "/stats");
+      const json = await res.json();
+      setTotalMessages(json.totalMessages);
+    } catch (e) {
+      console.error("stats fetch failed", e);
+      setTotalMessages(null);
+    }
+  }
   async function getPublicTimeLine() {
     refetch = false;
     console.log(host + ":" + port);
     let api = await fetch(host + ":" + port);
     let apijson = await api.json();
     setItems(apijson.data);
+    getTotalMessages();
+  }
+
+  function formatPubDate(pubDate) {
+    if (pubDate == null) return "";
+
+    const fmt = (d) =>
+      d.toLocaleString("en-GB", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
+
+    // epoch seconds/millis (future-proof)
+    if (typeof pubDate === "number" || /^[0-9]+$/.test(String(pubDate))) {
+      const n = Number(pubDate);
+      const ms = n < 1e12 ? n * 1000 : n;
+      const d = new Date(ms);
+      return isNaN(d.getTime()) ? String(pubDate) : fmt(d);
+    }
+
+    // UTC string "YYYY-MM-DD HH:MM:SS"
+    if (
+      typeof pubDate === "string" &&
+      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(pubDate)
+    ) {
+      const d = new Date(pubDate.replace(" ", "T") + "Z"); // treat as UTC
+      return isNaN(d.getTime()) ? pubDate : fmt(d);
+    }
+
+    const d = new Date(String(pubDate));
+    return isNaN(d.getTime()) ? String(pubDate) : fmt(d);
   }
 
   async function getUserTimeLine() {
@@ -421,7 +467,7 @@ export default function Timeline() {
 
                     <div className="text-xs  font-extralight">
                       {" "}
-                      {item.pubDate}
+                      {formatPubDate(item.pubDate)}
                     </div>
                   </div>
                 </div>
@@ -434,6 +480,9 @@ export default function Timeline() {
             </li>
           )}
         </ul>
+        <div className="mt-6 text-lg font-medium ">
+          {totalMessages ?? "0"} Total tweets
+        </div>
       </div>
     </div>
   );
