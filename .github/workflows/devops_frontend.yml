@@ -9,6 +9,9 @@ on:
     branches:
       [main]
       # branches: [ $default-branch ]
+concurrency:
+  group: backend-main
+  cancel-in-progress: true
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: registry.hub.docker.com/andersfrimann
