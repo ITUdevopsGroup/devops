@@ -1,14 +1,26 @@
 package com.devops.itu_minitwit.store;
 
-import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+
+import com.devops.itu_minitwit.domain.Follower;
+import com.devops.itu_minitwit.domain.FollowerId;
+import com.devops.itu_minitwit.domain.Message;
+import com.devops.itu_minitwit.domain.Meta;
+import com.devops.itu_minitwit.domain.User;
 import com.devops.itu_minitwit.dto.MessageResponse;
+import com.devops.itu_minitwit.repository.FollowerRepository;
+import com.devops.itu_minitwit.repository.MessageRepository;
+import com.devops.itu_minitwit.repository.MetaRepository;
+import com.devops.itu_minitwit.repository.UserRepository;
 
 @Component
 @Primary // IMPORTANT: makes Spring inject this instead of InMemoryStore
@@ -16,178 +28,128 @@ public class SqliteStore implements Store {
 
   private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-  private static final String DEFAULT_DB_PATH = "minitwit.db";
+  private final MetaRepository metaRepository;
+  private final UserRepository userRepository;
+  private final FollowerRepository followerRepository;
+  private final MessageRepository messageRepository;
 
-  private static String jdbcUrl() {
-    String filePath = System.getenv().getOrDefault("MINITWIT_DB_PATH", DEFAULT_DB_PATH);
-    if (filePath.startsWith("jdbc:sqlite:")) return filePath;
-    return "jdbc:sqlite:" + filePath;
-  }
-
-  public SqliteStore() {
-    // ensure meta table exists for persisting "latest"
-    try (var conn = DriverManager.getConnection(jdbcUrl());
-         var st = conn.createStatement()) {
-      st.executeUpdate("""
-        CREATE TABLE IF NOT EXISTS meta (
-          k TEXT PRIMARY KEY,
-          v TEXT NOT NULL
-        )
-      """);
-    } catch (SQLException e) {
-      throw new RuntimeException("Failed to init meta table: " + e.getMessage(), e);
-    }
+  public SqliteStore(MetaRepository metaRepository,
+                     UserRepository userRepository,
+                     FollowerRepository followerRepository,
+                     MessageRepository messageRepository) {
+    this.metaRepository = metaRepository;
+    this.userRepository = userRepository;
+    this.followerRepository = followerRepository;
+    this.messageRepository = messageRepository;
   }
 
   // --- latest ---
   @Override
   public long getLatest() {
-    try (var conn = DriverManager.getConnection(jdbcUrl());
-         var ps = conn.prepareStatement("SELECT v FROM meta WHERE k='latest'")) {
-      var rs = ps.executeQuery();
-      if (rs.next()) return Long.parseLong(rs.getString(1));
+    Optional<Meta> meta = metaRepository.findById("latest");
+    if (meta.isEmpty()) {
       return 0L;
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+    }
+    try {
+      return Long.parseLong(meta.get().getValue());
+    } catch (NumberFormatException e) {
+      return 0L;
     }
   }
 
   @Override
   public void setLatest(long value) {
-    try (var conn = DriverManager.getConnection(jdbcUrl());
-         var ps = conn.prepareStatement("""
-           INSERT INTO meta(k,v) VALUES('latest', ?)
-           ON CONFLICT(k) DO UPDATE SET v=excluded.v
-         """)) {
-      ps.setString(1, Long.toString(value));
-      ps.executeUpdate();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    Meta meta = metaRepository.findById("latest").orElseGet(Meta::new);
+    meta.setKey("latest");
+    meta.setValue(Long.toString(value));
+    metaRepository.save(meta);
   }
 
   // --- users ---
-  private int ensureUserId(String username) throws SQLException {
-    try (var conn = DriverManager.getConnection(jdbcUrl())) {
-      // try fetch
-      try (var ps = conn.prepareStatement("SELECT user_id FROM user WHERE username=?")) {
-        ps.setString(1, username);
-        var rs = ps.executeQuery();
-        if (rs.next()) return rs.getInt(1);
-      }
-      // insert minimal row (simulator doesn't care about email/pw_hash)
-      try (var ps = conn.prepareStatement(
-          "INSERT INTO user(username, email, pw_hash) VALUES(?, ?, ?)")) {
-        ps.setString(1, username);
-        ps.setString(2, username + "@sim.local");
-        ps.setString(3, ""); // empty hash
-        ps.executeUpdate();
-      } catch (SQLException insertErr) {
-        // if concurrent insert happened, fall through and re-select
-      }
-      try (var ps = conn.prepareStatement("SELECT user_id FROM user WHERE username=?")) {
-        ps.setString(1, username);
-        var rs = ps.executeQuery();
-        if (rs.next()) return rs.getInt(1);
-      }
-      throw new SQLException("Could not create/find user_id for " + username);
+  private int ensureUserId(String username) {
+    Optional<User> existing = userRepository.findByUsername(username);
+    if (existing.isPresent() && existing.get().getId() != null) {
+      return existing.get().getId();
     }
+
+    User u = new User();
+    u.setUsername(username);
+    u.setEmail(username + "@sim.local");
+    u.setPwHash("");
+    User saved = userRepository.save(u);
+    return saved.getId();
   }
 
   @Override
   public void registerUser(String username) {
-    try {
-      ensureUserId(username);
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    ensureUserId(username);
   }
 
   @Override
   public boolean userExists(String username) {
-    try (var conn = DriverManager.getConnection(jdbcUrl());
-         var ps = conn.prepareStatement("SELECT 1 FROM user WHERE username=?")) {
-      ps.setString(1, username);
-      return ps.executeQuery().next();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    return userRepository.existsByUsername(username);
   }
 
   // --- follows ---
   @Override
   public void follow(String who, String whom) {
-    try {
-      int whoId = ensureUserId(who);
-      int whomId = ensureUserId(whom);
-      try (var conn = DriverManager.getConnection(jdbcUrl());
-           var ps = conn.prepareStatement(
-             "INSERT OR IGNORE INTO follower(who_id, whom_id) VALUES(?, ?)")) {
-        ps.setInt(1, whoId);
-        ps.setInt(2, whomId);
-        ps.executeUpdate();
+    int whoId = ensureUserId(who);
+    int whomId = ensureUserId(whom);
+
+    FollowerId id = new FollowerId(whoId, whomId);
+    if (!followerRepository.existsById(id)) {
+      Optional<User> whoUserOpt = userRepository.findById(whoId);
+      Optional<User> whomUserOpt = userRepository.findById(whomId);
+      if (whoUserOpt.isEmpty() || whomUserOpt.isEmpty()) {
+        return;
       }
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+      Follower follower = new Follower();
+      follower.setId(id);
+      follower.setWho(whoUserOpt.get());
+      follower.setWhom(whomUserOpt.get());
+      followerRepository.save(follower);
     }
   }
 
   @Override
   public void unfollow(String who, String whom) {
-    try (var conn = DriverManager.getConnection(jdbcUrl());
-         var ps = conn.prepareStatement("""
-           DELETE FROM follower
-           WHERE who_id = (SELECT user_id FROM user WHERE username=?)
-             AND whom_id = (SELECT user_id FROM user WHERE username=?)
-         """)) {
-      ps.setString(1, who);
-      ps.setString(2, whom);
-      ps.executeUpdate();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+    Optional<User> whoOpt = userRepository.findByUsername(who);
+    Optional<User> whomOpt = userRepository.findByUsername(whom);
+    if (whoOpt.isEmpty() || whomOpt.isEmpty()) {
+      return;
+    }
+    FollowerId id = new FollowerId(whoOpt.get().getId(), whomOpt.get().getId());
+    if (followerRepository.existsById(id)) {
+      followerRepository.deleteById(id);
     }
   }
 
   @Override
   public List<String> getFollows(String who, int limit) {
-    try (var conn = DriverManager.getConnection(jdbcUrl());
-         var ps = conn.prepareStatement("""
-           SELECT u2.username
-           FROM follower f
-           JOIN user u1 ON u1.user_id = f.who_id
-           JOIN user u2 ON u2.user_id = f.whom_id
-           WHERE u1.username = ?
-           ORDER BY u2.username ASC
-           LIMIT ?
-         """)) {
-      ps.setString(1, who);
-      ps.setInt(2, limit);
-      var rs = ps.executeQuery();
-      var out = new ArrayList<String>();
-      while (rs.next()) out.add(rs.getString(1));
-      return out;
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+    List<Follower> edges = followerRepository.findByWhoUsernameOrderByWhomUsernameAsc(who);
+    List<String> out = new ArrayList<>();
+    for (Follower f : edges) {
+      out.add(f.getWhom().getUsername());
+      if (out.size() >= limit) break;
     }
+    return out;
   }
 
   // --- messages ---
   @Override
   public void addMessage(String username, String content) {
-    try {
-      int userId = ensureUserId(username);
-      long epoch = Instant.now().getEpochSecond();
-      try (var conn = DriverManager.getConnection(jdbcUrl());
-           var ps = conn.prepareStatement(
-             "INSERT INTO message(author_id, text, pub_date, flagged) VALUES(?, ?, ?, 0)")) {
-        ps.setInt(1, userId);
-        ps.setString(2, content);
-        ps.setLong(3, epoch);
-        ps.executeUpdate();
-      }
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+    int userId = ensureUserId(username);
+    Optional<User> userOpt = userRepository.findById(userId);
+    if (userOpt.isEmpty()) {
+      return;
     }
+    long epoch = Instant.now().getEpochSecond();
+    Message m = new Message();
+    m.setAuthor(userOpt.get());
+    m.setText(content);
+    m.setPubDate(epoch);
+    m.setFlagged(0);
+    messageRepository.save(m);
   }
 
   private static String fmtEpochSeconds(long seconds) {
@@ -197,55 +159,34 @@ public class SqliteStore implements Store {
 
   @Override
   public List<MessageResponse> getMessages(int limit) {
-    try (var conn = DriverManager.getConnection(jdbcUrl());
-         var ps = conn.prepareStatement("""
-           SELECT m.text, m.pub_date, u.username
-           FROM message m
-           JOIN user u ON u.user_id = m.author_id
-           WHERE m.flagged = 0
-           ORDER BY m.pub_date DESC
-           LIMIT ?
-         """)) {
-      ps.setInt(1, limit);
-      var rs = ps.executeQuery();
-      var out = new ArrayList<MessageResponse>();
-      while (rs.next()) {
-        String content = rs.getString(1);
-        long pub = rs.getLong(2);
-        String user = rs.getString(3);
-        out.add(new MessageResponse(content, fmtEpochSeconds(pub), user));
-      }
-      return out;
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+    List<Message> all = messageRepository.findByFlaggedOrderByPubDateDesc(0);
+    int size = Math.min(limit, all.size());
+    List<MessageResponse> out = new ArrayList<>();
+    for (int i = 0; i < size; i++) {
+      Message m = all.get(i);
+      String content = m.getText();
+      long pub = m.getPubDate() != null ? m.getPubDate() : 0L;
+      String user = m.getAuthor().getUsername();
+      out.add(new MessageResponse(content, fmtEpochSeconds(pub), user));
     }
+    return out;
   }
 
   @Override
   public List<MessageResponse> getMessagesByUser(String username, int limit) {
-    try (var conn = DriverManager.getConnection(jdbcUrl());
-         var ps = conn.prepareStatement("""
-           SELECT m.text, m.pub_date, u.username
-           FROM message m
-           JOIN user u ON u.user_id = m.author_id
-           WHERE m.flagged = 0 AND u.username = ?
-           ORDER BY m.pub_date DESC
-           LIMIT ?
-         """)) {
-      ps.setString(1, username);
-      ps.setInt(2, limit);
-      var rs = ps.executeQuery();
-      var out = new ArrayList<MessageResponse>();
-      while (rs.next()) {
-        out.add(new MessageResponse(
-          rs.getString(1),
-          fmtEpochSeconds(rs.getLong(2)),
-          rs.getString(3)
-        ));
-      }
-      return out;
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+    List<Message> all = messageRepository.findByFlaggedAndAuthorUsernameOrderByPubDateDesc(0, username);
+    int size = Math.min(limit, all.size());
+    List<MessageResponse> out = new ArrayList<>();
+    for (int i = 0; i < size; i++) {
+      Message m = all.get(i);
+      long pub = m.getPubDate() != null ? m.getPubDate() : 0L;
+      out.add(new MessageResponse(
+        m.getText(),
+        fmtEpochSeconds(pub),
+        m.getAuthor().getUsername()
+      ));
     }
+    return out;
   }
 }
+

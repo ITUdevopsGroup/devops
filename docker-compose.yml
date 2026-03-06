@@ -4,23 +4,38 @@ services:
       context: ./devops_backend
     ports:
       - "5001:5001"
-    volumes:
-      - minitwit_db:/data
     environment:
-      MINITWIT_DB_PATH: /data/minitwit.db
+      MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
+      MINITWIT_DB_USER: minitwit_user
+      MINITWIT_DB_PASSWORD: minitwit_password
+    depends_on:
+      - db
 
   frontend:
     build:
       context: ./devops_frontend
       args:
-        NEXT_PUBLIC_API_HOST: "http://ec2-13-51-198-31.eu-north-1.compute.amazonaws.com"
+        NEXT_PUBLIC_API_HOST: "http://localhost"
         NEXT_PUBLIC_API_PORT: "5001"
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_HOST: "http://ec2-13-51-198-31.eu-north-1.compute.amazonaws.com"
+      NEXT_PUBLIC_API_HOST: "http://localhost:5001/"
       NEXT_PUBLIC_API_PORT: "5001"
     depends_on:
       - backend
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: minitwit
+      POSTGRES_USER: minitwit_user
+      POSTGRES_PASSWORD: minitwit_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
 volumes:
-  minitwit_db:
+  db_data:
