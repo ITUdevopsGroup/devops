@@ -30,6 +30,7 @@ public class DatabaseService {
     private final String ADD_MESSAGE = "insert into message (author_id, text, pub_date, flagged) values (?, ?, ?, 0)";
     private final String GET_USER_ID = "select user_id,username from user where username = ?";
     private final String COUNT_MESSAGES_SQL = "select count(*) as total from message where flagged = 0";
+    private final String COUNT_USERS_SQL = "select count(*) as total from user";
     private static final Logger log = LogManager.getLogger();
     private static final String DEFAULT_DB_PATH = "minitwit.db"; // local dev fallback
 
@@ -53,6 +54,19 @@ public class DatabaseService {
                 return rs.getInt("total");
         } catch (SQLException e) {
             log.error("Count messages failed: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public int getTotalUserCount() {
+        try (
+                var conn = DriverManager.getConnection(jdbcUrl());
+                var stmt = conn.createStatement();
+                var rs = stmt.executeQuery(COUNT_USERS_SQL)) {
+            if (rs.next())
+                return rs.getInt("total");
+        } catch (SQLException e) {
+            log.error("Count users failed: " + e.getMessage());
         }
         return 0;
     }

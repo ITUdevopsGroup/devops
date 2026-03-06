@@ -1,25 +1,29 @@
 package com.devops.itu_minitwit.Controller;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.Base64;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.devops.itu_minitwit.Database.DatabaseService;
 import com.devops.itu_minitwit.Json.PublicDataContainer;
 import com.devops.itu_minitwit.Json.ResultContainer;
 import com.devops.itu_minitwit.Json.UserDataContainer;
-import org.apache.logging.log4j.Logger;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
-import java.util.Base64;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import org.apache.logging.log4j.LogManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.annotation.PostConstruct;
 
 @RestController
@@ -129,7 +133,10 @@ public class Controller {
   @GetMapping("/stats")
   public @ResponseBody String stats() throws JsonProcessingException {
     int total = databaseService.getTotalMessageCount();
-    return mapper.writeValueAsString(java.util.Map.of("totalMessages", total));
+    int totalUsers = databaseService.getTotalUserCount();
+
+    return mapper.writeValueAsString(java.util.Map.of("totalMessages", total,
+        "totalUsers", totalUsers));
   }
 
 }
