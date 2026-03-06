@@ -1,15 +1,14 @@
 package com.devops.itu_minitwit.Database;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Service;
 
 import com.devops.itu_minitwit.Json.PublicDataContainer;
 import com.devops.itu_minitwit.Json.PublicDataRecord;
@@ -17,96 +16,87 @@ import com.devops.itu_minitwit.Json.Result;
 import com.devops.itu_minitwit.Json.ResultContainer;
 import com.devops.itu_minitwit.Json.UserData;
 import com.devops.itu_minitwit.Json.UserDataContainer;
+import com.devops.itu_minitwit.domain.Follower;
+import com.devops.itu_minitwit.domain.FollowerId;
+import com.devops.itu_minitwit.domain.Message;
+import com.devops.itu_minitwit.domain.User;
+import com.devops.itu_minitwit.repository.FollowerRepository;
+import com.devops.itu_minitwit.repository.MessageRepository;
+import com.devops.itu_minitwit.repository.UserRepository;
 
+@Service
 public class DatabaseService {
 
-    private final String PUBLIC_SQL = "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id order by message.pub_date desc limit 30";
-    private final String USER_SQL = "select message.*, user.* from message, user where message.flagged = 0 and message.author_id = user.user_id and (user.user_id = ? or user.user_id in (select whom_id from follower where who_id = ?)) order by message.pub_date desc limit 30";
-    private final String REGISTER_SQL = "insert into user (username, email, pw_hash) values (?, ?, ?)";
-    private final String SPECIFIC_USER__SQL = "select * from user where username = ?";
-    private final String IS_FOLLOWED = "select 1 from follower where follower.who_id = ? and follower.whom_id = ?";
-    private final String FOLLOW = "insert into follower (who_id, whom_id) values (?, ?)";
-    private final String UNFOLLOW = "delete from follower where who_id=? and whom_id=?";
-    private final String ADD_MESSAGE = "insert into message (author_id, text, pub_date, flagged) values (?, ?, ?, 0)";
-    private final String GET_USER_ID = "select user_id,username from user where username = ?";
-    private final String COUNT_MESSAGES_SQL = "select count(*) as total from message where flagged = 0";
-    private final String COUNT_USERS_SQL = "select count(*) as total from user";
     private static final Logger log = LogManager.getLogger();
-    private static final String DEFAULT_DB_PATH = "minitwit.db"; // local dev fallback
 
-    private static String jdbcUrl() {
-        String filePath = System.getenv().getOrDefault("MINITWIT_DB_PATH", DEFAULT_DB_PATH);
-        // ensure jdbc:sqlite:<file>
-        if (filePath.startsWith("jdbc:sqlite:"))
-            return filePath;
-        return "jdbc:sqlite:" + filePath;
+    private final MessageRepository messageRepository;
+    private final UserRepository userRepository;
+    private final FollowerRepository followerRepository;
+
+    public DatabaseService(MessageRepository messageRepository,
+                           UserRepository userRepository,
+                           FollowerRepository followerRepository) {
+        this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
+        this.followerRepository = followerRepository;
     }
 
-    public DatabaseService() {
+    private String formatPubDate(Long seconds) {
+        if (seconds == null) {
+            return "";
+        }
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                .format(new Date(seconds * 1000L));
     }
 
     public int getTotalMessageCount() {
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var stmt = conn.createStatement();
-                var rs = stmt.executeQuery(COUNT_MESSAGES_SQL)) {
-            if (rs.next())
-                return rs.getInt("total");
-        } catch (SQLException e) {
+        try {
+            return (int) messageRepository.countByFlagged(0);
+        } catch (Exception e) {
             log.error("Count messages failed: " + e.getMessage());
+            return 0;
         }
-        return 0;
     }
 
     public int getTotalUserCount() {
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var stmt = conn.createStatement();
-                var rs = stmt.executeQuery(COUNT_USERS_SQL)) {
-            if (rs.next())
-                return rs.getInt("total");
-        } catch (SQLException e) {
+        try {
+            return (int) userRepository.count();
+        } catch (Exception e) {
             log.error("Count users failed: " + e.getMessage());
+            return 0;
         }
-        return 0;
-    }
-
-    public static Connection connect() {
-
-        try (
-                Connection conn = DriverManager.getConnection(jdbcUrl())) {
-            log.info("Connection to SQLite has been established.");
-            return conn;
-        } catch (SQLException e) {
-            log.error(e.getMessage());
-        }
-        return null;
     }
 
     public PublicDataContainer getPublicData() {
         log.info("Querying public data records");
-        try (
-                Connection conn = DriverManager.getConnection(jdbcUrl());
-                var stmt = conn.createStatement();
-                var rs = stmt.executeQuery(PUBLIC_SQL)) {
-            ArrayList<PublicDataRecord> data = new ArrayList<PublicDataRecord>();
-            while (rs.next()) {
-                PublicDataRecord record = new PublicDataRecord(rs.getInt("message_id"), rs.getString("author_id"),
-                        rs.getString("text"), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                                .format(new Date(rs.getInt("pub_date") * 1000L)),
-                        rs.getInt("flagged"),
-                        rs.getInt("user_id"), rs.getString("username"), rs.getString("email"), rs.getString("pw_hash"));
+        try {
+            List<Message> all = messageRepository.findByFlaggedOrderByPubDateDesc(0);
+            int limit = Math.min(30, all.size());
+            List<Message> messages = all.subList(0, limit);
+            ArrayList<PublicDataRecord> data = new ArrayList<>();
+
+            for (Message m : messages) {
+                User u = m.getAuthor();
+                PublicDataRecord record = new PublicDataRecord(
+                        m.getId(),
+                        u.getId() != null ? String.valueOf(u.getId()) : null,
+                        m.getText(),
+                        formatPubDate(m.getPubDate()),
+                        m.getFlagged() != null ? m.getFlagged() : 0,
+                        u.getId() != null ? u.getId() : 0,
+                        u.getUsername(),
+                        u.getEmail(),
+                        u.getPwHash()
+                );
                 data.add(record);
             }
             PublicDataContainer result = new PublicDataContainer(data, false);
-            conn.close();
-            log.info(String.format("Querying public data of succeded"));
+            log.info("Querying public data succeeded");
             return result;
-        } catch (SQLException e) {
-            log.error(String.format("Querying public data of failed" + " " + e.getMessage()));
-            System.err.println(e.getMessage());
+        } catch (Exception e) {
+            log.error("Querying public data failed " + e.getMessage());
+            return null;
         }
-        return null;
     }
 
     public PublicDataContainer getUserData(int sessionUser, String profileUser) {
@@ -119,88 +109,98 @@ public class DatabaseService {
         if (userdata != null && userdata.getUserData().getUserId() == 0) {
             log.error("User doesnt exist: " + profileUser);
             return new PublicDataContainer();
-        } else if (userdata == null)
+        } else if (userdata == null) {
             return new PublicDataContainer();
+        }
 
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var pstmt = conn.prepareStatement(USER_SQL)) {
-            pstmt.setInt(1, userdata.getUserData().getUserId());
-            pstmt.setInt(2, userdata.getUserData().getUserId());
+        try {
+            int profileUserId = userdata.getUserData().getUserId();
 
-            var rs = pstmt.executeQuery();
-            ArrayList<PublicDataRecord> data = new ArrayList<PublicDataRecord>();
+            Optional<User> profileOpt = userRepository.findById(profileUserId);
+            if (profileOpt.isEmpty()) {
+                return new PublicDataContainer();
+            }
+            User profile = profileOpt.get();
 
-            while (rs.next()) {
-                PublicDataRecord record = new PublicDataRecord(rs.getInt("message_id"), rs.getString("author_id"),
-                        rs.getString("text"), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-                                .format(new Date(rs.getInt("pub_date") * 1000L)),
-                        rs.getInt("flagged"),
-                        rs.getInt("user_id"), rs.getString("username"), rs.getString("email"), rs.getString("pw_hash"));
+            List<Follower> edges = followerRepository.findByWhoUsernameOrderByWhomUsernameAsc(profile.getUsername());
+            List<User> authors = new ArrayList<>();
+            authors.add(profile);
+            for (Follower f : edges) {
+                authors.add(f.getWhom());
+            }
+
+            List<Message> all = messageRepository
+                    .findByFlaggedAndAuthorInOrderByPubDateDesc(0, authors);
+            int limit = Math.min(30, all.size());
+            List<Message> messages = all.subList(0, limit);
+
+            ArrayList<PublicDataRecord> data = new ArrayList<>();
+            for (Message m : messages) {
+                User u = m.getAuthor();
+                PublicDataRecord record = new PublicDataRecord(
+                        m.getId(),
+                        u.getId() != null ? String.valueOf(u.getId()) : null,
+                        m.getText(),
+                        formatPubDate(m.getPubDate()),
+                        m.getFlagged() != null ? m.getFlagged() : 0,
+                        u.getId() != null ? u.getId() : 0,
+                        u.getUsername(),
+                        u.getEmail(),
+                        u.getPwHash()
+                );
                 data.add(record);
             }
-            PublicDataContainer result = new PublicDataContainer(data, followed.getUserData().isResult());
-            conn.close();
-            log.info(String.format("Querying user data of  user: {} succeded", sessionUser));
+
+            PublicDataContainer result = new PublicDataContainer(
+                    data,
+                    followed.getUserData().isResult()
+            );
+            log.info(String.format("Querying user data of  user: %s succeeded", sessionUser));
             return result;
-        } catch (SQLException e) {
-            log.error(String.format("Querying user data of  user: {} failed" + " " + e.getMessage(), sessionUser));
-            System.err.println(e.getMessage());
+        } catch (Exception e) {
+            log.error(String.format("Querying user data of  user: %s failed %s", sessionUser, e.getMessage()));
+            return null;
         }
-        return null;
     }
 
     public UserDataContainer getSpecificUserData(String userId, String pwdHash) {
 
         log.info("Querying user data records for user: " + userId);
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var pstmt = conn.prepareStatement(SPECIFIC_USER__SQL)) {
-            pstmt.setString(1, userId);
-
-            var rs = pstmt.executeQuery();
+        try {
+            Optional<User> userOpt = userRepository.findByUsername(userId);
             UserData userData = new UserData();
 
-            while (rs.next()) {
-                userData.setUsername(rs.getString("username"));
-                userData.setUserId(rs.getInt("user_id"));
-                if (pwdHash.equals(rs.getString("pw_hash"))) {
+            if (userOpt.isPresent()) {
+                User u = userOpt.get();
+                userData.setUsername(u.getUsername());
+                if (u.getId() != null) {
+                    userData.setUserId(u.getId());
+                }
+                if (pwdHash.equals(u.getPwHash())) {
                     userData.setPwOK(true);
                 }
             }
-            UserDataContainer data = new UserDataContainer(userData);
-            conn.close();
-            return data;
-        } catch (SQLException e) {
-            log.error(String.format("Querying specific user data of  user: {} failed" + " " + e.getMessage(), userId));
-            System.err.println(e.getMessage());
+            return new UserDataContainer(userData);
+        } catch (Exception e) {
+            log.error(String.format("Querying specific user data of  user: %s failed %s", userId, e.getMessage()));
+            return null;
         }
-        return null;
     }
 
     public UserDataContainer getUserId(String username) {
 
         log.info("Get use id: " + username);
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var pstmt = conn.prepareStatement(GET_USER_ID)) {
-            pstmt.setString(1, username);
-
-            var rs = pstmt.executeQuery();
+        try {
+            Optional<User> userOpt = userRepository.findByUsername(username);
             UserData userData = new UserData();
-
-            while (rs.next()) {
-                userData.setUserId(rs.getInt("user_id"));
+            if (userOpt.isPresent() && userOpt.get().getId() != null) {
+                userData.setUserId(userOpt.get().getId());
             }
-            UserDataContainer data = new UserDataContainer(userData);
-            pstmt.close();
-            conn.close();
-            return data;
-        } catch (SQLException e) {
-            log.error(String.format("Get use id: {} failed" + " " + e.getMessage(), username));
-            System.err.println(e.getMessage());
+            return new UserDataContainer(userData);
+        } catch (Exception e) {
+            log.error(String.format("Get use id: %s failed %s", username, e.getMessage()));
+            return null;
         }
-        return null;
     }
 
     public ResultContainer registerNewUser(String username, String email, String pwdHash) {
@@ -211,23 +211,16 @@ public class DatabaseService {
             return new ResultContainer(new Result("The username is already taken", true, false));
         }
 
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var pstmt = conn.prepareStatement(REGISTER_SQL)) {
-            conn.setAutoCommit(false);
-            pstmt.setString(1, username);
-            pstmt.setString(2, email);
-            pstmt.setString(3, pwdHash);
-            pstmt.executeUpdate();
-            log.info(String.format("Succesfully registred new user: {}, email: {}", username, email));
-            pstmt.close();
-            conn.commit();
-            conn.close();
-        } catch (SQLException e) {
-            System.err.println(e.getMessage());
-            log.error(String.format("Registration of new user: {}, email: {} failed." + " " + e.getMessage(), username,
-                    email));
-            return new ResultContainer(new Result(String.format("DB_ERROR"), true, false));
+        try {
+            User user = new User();
+            user.setUsername(username);
+            user.setEmail(email);
+            user.setPwHash(pwdHash);
+            userRepository.save(user);
+            log.info(String.format("Succesfully registred new user: %s, email: %s", username, email));
+        } catch (Exception e) {
+            log.error(String.format("Registration of new user: %s, email: %s failed. %s", username, email, e.getMessage()));
+            return new ResultContainer(new Result("DB_ERROR", true, false));
         }
         return new ResultContainer(new Result("OK", false, true));
 
@@ -238,26 +231,17 @@ public class DatabaseService {
         UserDataContainer profileUserId = getUserId(profileUser);
 
         boolean result = false;
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var pstmt = conn.prepareStatement(IS_FOLLOWED)) {
-            conn.setAutoCommit(false);
-            pstmt.setInt(1, sessionUser);
-            pstmt.setInt(2, profileUserId.getUserData().getUserId());
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                result = true;
+        try {
+            int whomId = profileUserId.getUserData().getUserId();
+            if (whomId != 0 && sessionUser != 0) {
+                FollowerId id = new FollowerId(sessionUser, whomId);
+                result = followerRepository.existsById(id);
             }
-            log.info(String.format("Succesfully checked follow status: {}, profileUser: {}", sessionUser, profileUser));
-            pstmt.close();
-            conn.commit();
-            conn.close();
-        } catch (SQLException e) {
-            System.err.println(e.getMessage());
-            log.error(String.format("Check of follow status: {}, profileUser: {} failed" + " " + e.getMessage(),
-                    sessionUser, profileUser));
-            return new ResultContainer(new Result(String.format("DB_ERROR"), true, false));
-
+            log.info(String.format("Succesfully checked follow status: %s, profileUser: %s", sessionUser, profileUser));
+        } catch (Exception e) {
+            log.error(String.format("Check of follow status: %s, profileUser: %s failed %s",
+                    sessionUser, profileUser, e.getMessage()));
+            return new ResultContainer(new Result("DB_ERROR", true, false));
         }
         return new ResultContainer(new Result("OK", false, result));
     }
@@ -266,30 +250,32 @@ public class DatabaseService {
         log.info("Follow user: " + userId);
         int whom;
         UserDataContainer userdata = getUserId(whoUsername);
-        if (userdata != null && userdata.getUserData().getUserId() != 0)
+        if (userdata != null && userdata.getUserData().getUserId() != 0) {
             whom = userdata.getUserData().getUserId();
-        else {
+        } else {
             log.error("User doesnt exists: " + whoUsername);
-            return new ResultContainer(new Result(String.format("NOT_EXISTS"), true, false));
+            return new ResultContainer(new Result("NOT_EXISTS", true, false));
         }
 
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var pstmt = conn.prepareStatement(FOLLOW)) {
-            conn.setAutoCommit(false);
-
-            pstmt.setString(1, userId);
-            pstmt.setInt(2, whom);
-
-            pstmt.executeUpdate();
-            log.info(String.format("Succesfully followed: {}, profileUser: {}", userId, whom));
-            pstmt.close();
-            conn.commit();
-            conn.close();
-        } catch (SQLException e) {
-            System.err.println(e.getMessage());
-            log.error(String.format("Follow {}, profileUser: {} failed " + " " + e.getMessage(), userId, whom));
-            return new ResultContainer(new Result(String.format("DB_ERROR"), true, false));
+        try {
+            int who = Integer.parseInt(userId);
+            FollowerId id = new FollowerId(who, whom);
+            if (!followerRepository.existsById(id)) {
+                Optional<User> whoUserOpt = userRepository.findById(who);
+                Optional<User> whomUserOpt = userRepository.findById(whom);
+                if (whoUserOpt.isEmpty() || whomUserOpt.isEmpty()) {
+                    return new ResultContainer(new Result("NOT_EXISTS", true, false));
+                }
+                Follower follower = new Follower();
+                follower.setId(id);
+                follower.setWho(whoUserOpt.get());
+                follower.setWhom(whomUserOpt.get());
+                followerRepository.save(follower);
+            }
+            log.info(String.format("Succesfully followed: %s, profileUser: %s", userId, whom));
+        } catch (Exception e) {
+            log.error(String.format("Follow %s, profileUser: %s failed %s", userId, whom, e.getMessage()));
+            return new ResultContainer(new Result("DB_ERROR", true, false));
         }
         return new ResultContainer(new Result("OK", false, true));
     }
@@ -298,30 +284,23 @@ public class DatabaseService {
         log.info("Unfollow user: " + userId);
         int whom;
         UserDataContainer userdata = getUserId(whoUsername);
-        if (userdata != null && userdata.getUserData().getUserId() != 0)
+        if (userdata != null && userdata.getUserData().getUserId() != 0) {
             whom = userdata.getUserData().getUserId();
-        else {
+        } else {
             log.error("User doesnt exist: " + whoUsername);
-            return new ResultContainer(new Result(String.format("NOT_EXISTS"), true, false));
+            return new ResultContainer(new Result("NOT_EXISTS", true, false));
         }
 
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var pstmt = conn.prepareStatement(UNFOLLOW)) {
-            conn.setAutoCommit(false);
-
-            pstmt.setString(1, userId);
-            pstmt.setInt(2, whom);
-
-            pstmt.executeUpdate();
-            log.info(String.format("Succesfully unfollowed: {}, profileUser: {}", userId, whom));
-            pstmt.close();
-            conn.commit();
-            conn.close();
-        } catch (SQLException e) {
-            System.err.println(e.getMessage());
-            log.error(String.format("Follow {}, unprofileUser: {} failed" + " " + e.getMessage(), userId, whom));
-            return new ResultContainer(new Result(String.format("NOT_EXISTS"), true, false));
+        try {
+            int who = Integer.parseInt(userId);
+            FollowerId id = new FollowerId(who, whom);
+            if (followerRepository.existsById(id)) {
+                followerRepository.deleteById(id);
+            }
+            log.info(String.format("Succesfully unfollowed: %s, profileUser: %s", userId, whom));
+        } catch (Exception e) {
+            log.error(String.format("Unfollow %s, profileUser: %s failed %s", userId, whom, e.getMessage()));
+            return new ResultContainer(new Result("NOT_EXISTS", true, false));
         }
         return new ResultContainer(new Result("OK", false, true));
     }
@@ -329,23 +308,26 @@ public class DatabaseService {
     public ResultContainer addMessage(String userId, String text, String pubDate, String flagged) {
         log.info("Add message for user: " + userId);
 
-        try (
-                var conn = DriverManager.getConnection(jdbcUrl());
-                var pstmt = conn.prepareStatement(ADD_MESSAGE)) {
-            conn.setAutoCommit(false);
-            pstmt.setString(1, userId);
-            pstmt.setString(2, text);
-            pstmt.setString(3, pubDate);
-
-            pstmt.executeUpdate();
-            log.info(String.format("Succesfully added message for: {}", userId));
-            pstmt.close();
-            conn.commit();
-            conn.close();
-        } catch (SQLException e) {
-            System.err.println(e.getMessage());
-            log.error(String.format("Add message failed for: {}" + e.getMessage(), userId));
-            return new ResultContainer(new Result(String.format("NOT_EXISTS"), true, false));
+        try {
+            int uid = Integer.parseInt(userId);
+            Optional<User> userOpt = userRepository.findById(uid);
+            if (userOpt.isEmpty()) {
+                return new ResultContainer(new Result("NOT_EXISTS", true, false));
+            }
+            Message m = new Message();
+            m.setAuthor(userOpt.get());
+            m.setText(text);
+            try {
+                m.setPubDate(Long.parseLong(pubDate));
+            } catch (NumberFormatException ex) {
+                m.setPubDate(0L);
+            }
+            m.setFlagged(0);
+            messageRepository.save(m);
+            log.info(String.format("Succesfully added message for: %s", userId));
+        } catch (Exception e) {
+            log.error(String.format("Add message failed for: %s %s", userId, e.getMessage()));
+            return new ResultContainer(new Result("NOT_EXISTS", true, false));
         }
         return new ResultContainer(new Result("OK", false, true));
     }

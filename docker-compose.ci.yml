@@ -5,9 +5,21 @@ services:
     ports:
       - "5001:5001"
     environment:
-      MINITWIT_DB_PATH: /data/minitwit.db
+      MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
+      MINITWIT_DB_USER: minitwit_user
+      MINITWIT_DB_PASSWORD: minitwit_password
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: minitwit
+      POSTGRES_USER: minitwit_user
+      POSTGRES_PASSWORD: minitwit_password
     volumes:
-      - minitwit_db:/data
+      - db_data_ci:/var/lib/postgresql/data
 
 volumes:
-  minitwit_db:
+  db_data_ci:
