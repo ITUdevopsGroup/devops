@@ -34,12 +34,29 @@ public class DatabaseService {
     private static final Logger log = LogManager.getLogger();
     private static final String DEFAULT_DB_PATH = "minitwit.db"; // local dev fallback
 
+    // Secondary PostgreSQL connection details (dual-write target)
+    private static final String DEFAULT_PG_URL = "jdbc:postgresql://localhost:5432/minitwit";
+    private static final String DEFAULT_PG_USER = "postgres";
+    private static final String DEFAULT_PG_PASSWORD = "postgres";
+
     private static String jdbcUrl() {
         String filePath = System.getenv().getOrDefault("MINITWIT_DB_PATH", DEFAULT_DB_PATH);
         // ensure jdbc:sqlite:<file>
         if (filePath.startsWith("jdbc:sqlite:"))
             return filePath;
         return "jdbc:sqlite:" + filePath;
+    }
+
+    private static String pgJdbcUrl() {
+        return System.getenv().getOrDefault("MINITWIT_PG_URL", DEFAULT_PG_URL);
+    }
+
+    private static String pgUser() {
+        return System.getenv().getOrDefault("MINITWIT_PG_USER", DEFAULT_PG_USER);
+    }
+
+    private static String pgPassword() {
+        return System.getenv().getOrDefault("MINITWIT_PG_PASSWORD", DEFAULT_PG_PASSWORD);
     }
 
     public DatabaseService() {
@@ -203,6 +220,22 @@ public class DatabaseService {
         return null;
     }
 
+    private String getUsernameById(int userId) {
+        final String sql = "select username from user where user_id = ?";
+        try (
+                var conn = DriverManager.getConnection(jdbcUrl());
+                var pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            var rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("username");
+            }
+        } catch (SQLException e) {
+            log.error(String.format("Get username by id: %d failed %s", userId, e.getMessage()));
+        }
+        return null;
+    }
+
     public ResultContainer registerNewUser(String username, String email, String pwdHash) {
         log.info("Registring new user: " + username);
         UserDataContainer userdata = getUserId(username);
@@ -228,6 +261,24 @@ public class DatabaseService {
             log.error(String.format("Registration of new user: {}, email: {} failed." + " " + e.getMessage(), username,
                     email));
             return new ResultContainer(new Result(String.format("DB_ERROR"), true, false));
+        }
+
+        // Best-effort mirror to PostgreSQL
+        try (
+                var conn = DriverManager.getConnection(pgJdbcUrl(), pgUser(), pgPassword());
+                var pstmt = conn.prepareStatement(
+                        "insert into \"user\" (username, email, pw_hash) values (?, ?, ?) on conflict (username) do nothing")) {
+            conn.setAutoCommit(false);
+            pstmt.setString(1, username);
+            pstmt.setString(2, email);
+            pstmt.setString(3, pwdHash);
+            pstmt.executeUpdate();
+            pstmt.close();
+            conn.commit();
+            conn.close();
+        } catch (SQLException e) {
+            log.error(String.format("PostgreSQL dual-write failed for new user: %s, email: %s. %s", username, email,
+                    e.getMessage()));
         }
         return new ResultContainer(new Result("OK", false, true));
 
@@ -291,6 +342,45 @@ public class DatabaseService {
             log.error(String.format("Follow {}, profileUser: {} failed " + " " + e.getMessage(), userId, whom));
             return new ResultContainer(new Result(String.format("DB_ERROR"), true, false));
         }
+
+        // Best-effort mirror to PostgreSQL
+        try {
+            int whoId = Integer.parseInt(userId);
+            String followerUsername = getUsernameById(whoId);
+            if (followerUsername != null) {
+                // Ensure both users exist in PostgreSQL and insert follower edge
+                try (var conn = DriverManager.getConnection(pgJdbcUrl(), pgUser(), pgPassword())) {
+                    conn.setAutoCommit(false);
+                    try (var ensureUser = conn.prepareStatement(
+                            "insert into \"user\"(username, email, pw_hash) values(?, ?, ?) on conflict (username) do nothing")) {
+                        ensureUser.setString(1, followerUsername);
+                        ensureUser.setString(2, followerUsername + "@sim.local");
+                        ensureUser.setString(3, "");
+                        ensureUser.executeUpdate();
+                        ensureUser.setString(1, whoUsername);
+                        ensureUser.setString(2, whoUsername + "@sim.local");
+                        ensureUser.setString(3, "");
+                        ensureUser.executeUpdate();
+                    }
+                    try (var ps = conn.prepareStatement(
+                            """
+                                    insert into follower(who_id, whom_id)
+                                    select u1.user_id, u2.user_id
+                                    from "user" u1, "user" u2
+                                    where u1.username = ? and u2.username = ?
+                                    on conflict do nothing
+                                    """)) {
+                        ps.setString(1, followerUsername);
+                        ps.setString(2, whoUsername);
+                        ps.executeUpdate();
+                    }
+                    conn.commit();
+                }
+            }
+        } catch (Exception e) {
+            log.error(String.format("PostgreSQL dual-write failed for follow %s, profileUser: %s. %s", userId,
+                    whoUsername, e.getMessage()));
+        }
         return new ResultContainer(new Result("OK", false, true));
     }
 
@@ -323,6 +413,30 @@ public class DatabaseService {
             log.error(String.format("Follow {}, unprofileUser: {} failed" + " " + e.getMessage(), userId, whom));
             return new ResultContainer(new Result(String.format("NOT_EXISTS"), true, false));
         }
+
+        // Best-effort mirror to PostgreSQL
+        try {
+            int whoId = Integer.parseInt(userId);
+            String followerUsername = getUsernameById(whoId);
+            if (followerUsername != null) {
+                try (var conn = DriverManager.getConnection(pgJdbcUrl(), pgUser(), pgPassword());
+                     var ps = conn.prepareStatement(
+                             """
+                                     delete from follower
+                                     where who_id = (select user_id from "user" where username=?)
+                                       and whom_id = (select user_id from "user" where username=?)
+                                     """)) {
+                    conn.setAutoCommit(false);
+                    ps.setString(1, followerUsername);
+                    ps.setString(2, whoUsername);
+                    ps.executeUpdate();
+                    conn.commit();
+                }
+            }
+        } catch (Exception e) {
+            log.error(String.format("PostgreSQL dual-write failed for unfollow %s, profileUser: %s. %s", userId,
+                    whoUsername, e.getMessage()));
+        }
         return new ResultContainer(new Result("OK", false, true));
     }
 
@@ -346,6 +460,40 @@ public class DatabaseService {
             System.err.println(e.getMessage());
             log.error(String.format("Add message failed for: {}" + e.getMessage(), userId));
             return new ResultContainer(new Result(String.format("NOT_EXISTS"), true, false));
+        }
+
+        // Best-effort mirror to PostgreSQL
+        try {
+            int uid = Integer.parseInt(userId);
+            String username = getUsernameById(uid);
+            if (username != null) {
+                try (var conn = DriverManager.getConnection(pgJdbcUrl(), pgUser(), pgPassword())) {
+                    conn.setAutoCommit(false);
+                    // ensure user exists
+                    try (var ensureUser = conn.prepareStatement(
+                            "insert into \"user\"(username, email, pw_hash) values(?, ?, ?) on conflict (username) do nothing")) {
+                        ensureUser.setString(1, username);
+                        ensureUser.setString(2, username + "@sim.local");
+                        ensureUser.setString(3, "");
+                        ensureUser.executeUpdate();
+                    }
+                    try (var ps = conn.prepareStatement(
+                            """
+                                    insert into message(author_id, text, pub_date, flagged)
+                                    select u.user_id, ?, ?, 0
+                                    from "user" u
+                                    where u.username = ?
+                                    """)) {
+                        ps.setString(1, text);
+                        ps.setString(2, pubDate);
+                        ps.setString(3, username);
+                        ps.executeUpdate();
+                    }
+                    conn.commit();
+                }
+            }
+        } catch (Exception e) {
+            log.error(String.format("PostgreSQL dual-write failed for add message for: %s %s", userId, e.getMessage()));
         }
         return new ResultContainer(new Result("OK", false, true));
     }

@@ -6,8 +6,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+
 import com.devops.itu_minitwit.dto.MessageResponse;
 
 @Component
@@ -18,10 +22,29 @@ public class SqliteStore implements Store {
 
   private static final String DEFAULT_DB_PATH = "minitwit.db";
 
+  private static final Logger log = LogManager.getLogger();
+
+  // Secondary PostgreSQL connection details (dual-write target)
+  private static final String DEFAULT_PG_URL = "jdbc:postgresql://localhost:5432/minitwit";
+  private static final String DEFAULT_PG_USER = "postgres";
+  private static final String DEFAULT_PG_PASSWORD = "postgres";
+
   private static String jdbcUrl() {
     String filePath = System.getenv().getOrDefault("MINITWIT_DB_PATH", DEFAULT_DB_PATH);
     if (filePath.startsWith("jdbc:sqlite:")) return filePath;
     return "jdbc:sqlite:" + filePath;
+  }
+
+  private static String pgJdbcUrl() {
+    return System.getenv().getOrDefault("MINITWIT_PG_URL", DEFAULT_PG_URL);
+  }
+
+  private static String pgUser() {
+    return System.getenv().getOrDefault("MINITWIT_PG_USER", DEFAULT_PG_USER);
+  }
+
+  private static String pgPassword() {
+    return System.getenv().getOrDefault("MINITWIT_PG_PASSWORD", DEFAULT_PG_PASSWORD);
   }
 
   public SqliteStore() {
@@ -94,12 +117,50 @@ public class SqliteStore implements Store {
     }
   }
 
+  /**
+   * Ensure a user row exists in PostgreSQL and return its id.
+   * Best-effort helper for dual-write; callers should catch {@link SQLException}.
+   */
+  private int ensurePgUserId(String username) throws SQLException {
+    try (var conn = DriverManager.getConnection(pgJdbcUrl(), pgUser(), pgPassword())) {
+      // try fetch
+      try (var ps = conn.prepareStatement("SELECT user_id FROM \"user\" WHERE username=?")) {
+        ps.setString(1, username);
+        var rs = ps.executeQuery();
+        if (rs.next()) return rs.getInt(1);
+      }
+      // insert minimal row (simulator doesn't care about email/pw_hash)
+      try (var ps = conn.prepareStatement(
+          "INSERT INTO \"user\"(username, email, pw_hash) VALUES(?, ?, ?)")) {
+        ps.setString(1, username);
+        ps.setString(2, username + "@sim.local");
+        ps.setString(3, "");
+        ps.executeUpdate();
+      } catch (SQLException insertErr) {
+        // if concurrent insert happened, fall through and re-select
+      }
+      try (var ps = conn.prepareStatement("SELECT user_id FROM \"user\" WHERE username=?")) {
+        ps.setString(1, username);
+        var rs = ps.executeQuery();
+        if (rs.next()) return rs.getInt(1);
+      }
+      throw new SQLException("Could not create/find PostgreSQL user_id for " + username);
+    }
+  }
+
   @Override
   public void registerUser(String username) {
     try {
       ensureUserId(username);
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }
+
+    // Best-effort mirror to PostgreSQL
+    try {
+      ensurePgUserId(username);
+    } catch (SQLException e) {
+      log.error("PostgreSQL dual-write failed for registerUser '{}': {}", username, e.getMessage());
     }
   }
 
@@ -130,6 +191,21 @@ public class SqliteStore implements Store {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+
+    // Best-effort mirror to PostgreSQL
+    try {
+      int whoIdPg = ensurePgUserId(who);
+      int whomIdPg = ensurePgUserId(whom);
+      try (var conn = DriverManager.getConnection(pgJdbcUrl(), pgUser(), pgPassword());
+           var ps = conn.prepareStatement(
+             "INSERT INTO follower(who_id, whom_id) VALUES(?, ?) ON CONFLICT DO NOTHING")) {
+        ps.setInt(1, whoIdPg);
+        ps.setInt(2, whomIdPg);
+        ps.executeUpdate();
+      }
+    } catch (SQLException e) {
+      log.error("PostgreSQL dual-write failed for follow '{}' -> '{}': {}", who, whom, e.getMessage());
+    }
   }
 
   @Override
@@ -145,6 +221,20 @@ public class SqliteStore implements Store {
       ps.executeUpdate();
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }
+
+    // Best-effort mirror to PostgreSQL
+    try (var conn = DriverManager.getConnection(pgJdbcUrl(), pgUser(), pgPassword());
+         var ps = conn.prepareStatement("""
+           DELETE FROM follower
+           WHERE who_id = (SELECT user_id FROM "user" WHERE username=?)
+             AND whom_id = (SELECT user_id FROM "user" WHERE username=?)
+         """)) {
+      ps.setString(1, who);
+      ps.setString(2, whom);
+      ps.executeUpdate();
+    } catch (SQLException e) {
+      log.error("PostgreSQL dual-write failed for unfollow '{}' -> '{}': {}", who, whom, e.getMessage());
     }
   }
 
@@ -187,6 +277,22 @@ public class SqliteStore implements Store {
       }
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }
+
+    // Best-effort mirror to PostgreSQL
+    try {
+      int userIdPg = ensurePgUserId(username);
+      long epoch = Instant.now().getEpochSecond();
+      try (var conn = DriverManager.getConnection(pgJdbcUrl(), pgUser(), pgPassword());
+           var ps = conn.prepareStatement(
+             "INSERT INTO message(author_id, text, pub_date, flagged) VALUES(?, ?, ?, 0)")) {
+        ps.setInt(1, userIdPg);
+        ps.setString(2, content);
+        ps.setLong(3, epoch);
+        ps.executeUpdate();
+      }
+    } catch (SQLException e) {
+      log.error("PostgreSQL dual-write failed for addMessage for '{}': {}", username, e.getMessage());
     }
   }
 
