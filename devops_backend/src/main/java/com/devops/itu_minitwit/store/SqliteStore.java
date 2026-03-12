@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import com.devops.itu_minitwit.domain.Follower;
@@ -34,9 +35,9 @@ public class SqliteStore implements Store {
   private final MessageRepository messageRepository;
 
   public SqliteStore(MetaRepository metaRepository,
-                     UserRepository userRepository,
-                     FollowerRepository followerRepository,
-                     MessageRepository messageRepository) {
+      UserRepository userRepository,
+      FollowerRepository followerRepository,
+      MessageRepository messageRepository) {
     this.metaRepository = metaRepository;
     this.userRepository = userRepository;
     this.followerRepository = followerRepository;
@@ -81,7 +82,7 @@ public class SqliteStore implements Store {
   }
 
   @Override
-  public void registerUser(String username) {
+  public void registerUser(String username, String email, String pwHash) {
     ensureUserId(username);
   }
 
@@ -130,7 +131,8 @@ public class SqliteStore implements Store {
     List<String> out = new ArrayList<>();
     for (Follower f : edges) {
       out.add(f.getWhom().getUsername());
-      if (out.size() >= limit) break;
+      if (out.size() >= limit)
+        break;
     }
     return out;
   }
@@ -159,11 +161,11 @@ public class SqliteStore implements Store {
 
   @Override
   public List<MessageResponse> getMessages(int limit) {
-    List<Message> all = messageRepository.findByFlaggedOrderByPubDateDesc(0);
-    int size = Math.min(limit, all.size());
+    List<Message> all = messageRepository.findByFlaggedOrderByPubDateDesc(
+        0, PageRequest.of(0, limit));
+
     List<MessageResponse> out = new ArrayList<>();
-    for (int i = 0; i < size; i++) {
-      Message m = all.get(i);
+    for (Message m : all) {
       String content = m.getText();
       long pub = m.getPubDate() != null ? m.getPubDate() : 0L;
       String user = m.getAuthor().getUsername();
@@ -174,19 +176,17 @@ public class SqliteStore implements Store {
 
   @Override
   public List<MessageResponse> getMessagesByUser(String username, int limit) {
-    List<Message> all = messageRepository.findByFlaggedAndAuthorUsernameOrderByPubDateDesc(0, username);
-    int size = Math.min(limit, all.size());
+    List<Message> all = messageRepository.findByFlaggedAndAuthorUsernameOrderByPubDateDesc(
+        0, username, PageRequest.of(0, limit));
+
     List<MessageResponse> out = new ArrayList<>();
-    for (int i = 0; i < size; i++) {
-      Message m = all.get(i);
+    for (Message m : all) {
       long pub = m.getPubDate() != null ? m.getPubDate() : 0L;
       out.add(new MessageResponse(
-        m.getText(),
-        fmtEpochSeconds(pub),
-        m.getAuthor().getUsername()
-      ));
+          m.getText(),
+          fmtEpochSeconds(pub),
+          m.getAuthor().getUsername()));
     }
     return out;
   }
 }
-

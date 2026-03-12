@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.devops.itu_minitwit.Json.PublicDataContainer;
@@ -34,8 +35,8 @@ public class DatabaseService {
     private final FollowerRepository followerRepository;
 
     public DatabaseService(MessageRepository messageRepository,
-                           UserRepository userRepository,
-                           FollowerRepository followerRepository) {
+            UserRepository userRepository,
+            FollowerRepository followerRepository) {
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.followerRepository = followerRepository;
@@ -70,9 +71,8 @@ public class DatabaseService {
     public PublicDataContainer getPublicData() {
         log.info("Querying public data records");
         try {
-            List<Message> all = messageRepository.findByFlaggedOrderByPubDateDesc(0);
-            int limit = Math.min(30, all.size());
-            List<Message> messages = all.subList(0, limit);
+            List<Message> messages = messageRepository.findByFlaggedOrderByPubDateDesc(
+                    0, PageRequest.of(0, 30));
             ArrayList<PublicDataRecord> data = new ArrayList<>();
 
             for (Message m : messages) {
@@ -86,8 +86,7 @@ public class DatabaseService {
                         u.getId() != null ? u.getId() : 0,
                         u.getUsername(),
                         u.getEmail(),
-                        u.getPwHash()
-                );
+                        u.getPwHash());
                 data.add(record);
             }
             PublicDataContainer result = new PublicDataContainer(data, false);
@@ -129,10 +128,8 @@ public class DatabaseService {
                 authors.add(f.getWhom());
             }
 
-            List<Message> all = messageRepository
-                    .findByFlaggedAndAuthorInOrderByPubDateDesc(0, authors);
-            int limit = Math.min(30, all.size());
-            List<Message> messages = all.subList(0, limit);
+            List<Message> messages = messageRepository
+                    .findByFlaggedAndAuthorInOrderByPubDateDesc(0, authors, PageRequest.of(0, 30));
 
             ArrayList<PublicDataRecord> data = new ArrayList<>();
             for (Message m : messages) {
@@ -146,15 +143,13 @@ public class DatabaseService {
                         u.getId() != null ? u.getId() : 0,
                         u.getUsername(),
                         u.getEmail(),
-                        u.getPwHash()
-                );
+                        u.getPwHash());
                 data.add(record);
             }
 
             PublicDataContainer result = new PublicDataContainer(
                     data,
-                    followed.getUserData().isResult()
-            );
+                    followed.getUserData().isResult());
             log.info(String.format("Querying user data of  user: %s succeeded", sessionUser));
             return result;
         } catch (Exception e) {
@@ -219,7 +214,8 @@ public class DatabaseService {
             userRepository.save(user);
             log.info(String.format("Succesfully registred new user: %s, email: %s", username, email));
         } catch (Exception e) {
-            log.error(String.format("Registration of new user: %s, email: %s failed. %s", username, email, e.getMessage()));
+            log.error(String.format("Registration of new user: %s, email: %s failed. %s", username, email,
+                    e.getMessage()));
             return new ResultContainer(new Result("DB_ERROR", true, false));
         }
         return new ResultContainer(new Result("OK", false, true));
