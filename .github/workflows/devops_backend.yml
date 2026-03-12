@@ -7,8 +7,6 @@ on:
     # Publish semver tags as releases.
     tags: ["v*.*.*"]
   pull_request:
-    #branches: [alpMerge2]
-
     branches: [alpOrm]
 
 env:
