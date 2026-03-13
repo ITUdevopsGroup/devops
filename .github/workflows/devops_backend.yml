@@ -2,12 +2,12 @@ name: build_and_deploy_devops_backend
 
 on:
   push:
-    branches: [alpOrm]
+    branches: [main]
     #branches: [alpMerge2]
     # Publish semver tags as releases.
     tags: ["v*.*.*"]
   pull_request:
-    branches: [alpOrm]
+    branches: [main]
 
 env:
   # Use docker.io for Docker Hub if empty
