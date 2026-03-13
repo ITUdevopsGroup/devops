@@ -1,0 +1,39 @@
+name: deploy_monitoring
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy monitoring files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ec2-13-51-198-31.eu-north-1.compute.amazonaws.com
+          username: ubuntu
+          key: ${{ secrets.VAGRANT }}
+          port: 22
+          source: "monitoring/,docker-compose.yml"
+          target: "/home/ubuntu/devopsminitwit"
+
+      - name: Start monitoring stack
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ec2-13-51-198-31.eu-north-1.compute.amazonaws.com
+          username: ubuntu
+          key: ${{ secrets.VAGRANT }}
+          port: 22
+          envs: GRAFANA_PASSWORD
+          script: |
+            cd /home/ubuntu/devopsminitwit
+            export GRAFANA_PASSWORD=$GRAFANA_PASSWORD
+            docker compose up -d node-exporter prometheus grafana
+        env:
+          GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}
