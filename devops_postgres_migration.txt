@@ -1,0 +1,68 @@
+****Install postgres (NOT RELEVANT NOW)****
+
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl status postgresql
+
+Change /etc/postgresql/<version>/main/postgresql.conf:
+	listen_addresses='*'
+sudo invoke-rc.d postgresql restart
+
+Change /etc/postgresql/9.1/main/pg_hba.conf add following line:
+	host all all all md5
+sudo invoke-rc.d postgresql reload
+
+****BELOW IS RELEVANT****
+
+Install pgadmin:
+		https://www.postgresql.org/ftp/pgadmin/pgadmin4/v9.13/windows/
+		
+Connect to db:
+	host: ec2-13-60-32-149.eu-north-1.compute.amazonaws.com
+	port: 5432
+Create db called minitwit
+
+Install sqllite cli: 
+	https://dev.to/dendihandian/installing-sqlite3-in-windows-44eb
+
+Download db file from server:
+	scp -r -i "vagrant.pem" ubuntu@http://ec2-13-51-198-31.eu-north-1.compute.amazonaws.com/:/home/ubuntu/local_database.db .
+
+Export tables to csv using sqllite3 cli from command prompt:
+
+.open <path to db file>\local_database.db
+.mode column
+.mode csv
+.output meta.csv
+SELECT k,v from meta;
+.quit
+
+.open C:\Users\ander\devops\aws\local_database.db
+.mode column
+.mode csv
+.output message.csv
+SELECT message_id,flagged,pub_date,text,author_id FROM message;
+.quit
+
+.open C:\Users\ander\devops\aws\local_database.db
+.mode column
+.mode csv
+.output follower.csv
+SELECT who_id,whom_id FROM follower;
+.quit
+
+.open C:\Users\ander\devops\aws\local_database.db
+.mode column
+.mode csv
+.output user.csv
+SELECT user_id,email,pw_hash,username FROM user;
+.quit
+
+Import all csv files to database using pgadmin:
+	right click on table in public schema in db and choose import. Choose file and utf-8 format. 
+	
+Deploy alpOrm branch and verify
+
+Delete db file on server but keep it perhaps as backup in github
+
+*If you need to start over you can delete all content in a table right clicking on and choosing truncate -> truncate cascade
