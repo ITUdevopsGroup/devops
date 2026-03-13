@@ -65,6 +65,7 @@ services:
       - "3001:3000"
     depends_on:
       - prometheus
-
+      
+volumes:
   prometheus_data:
   grafana_data:
