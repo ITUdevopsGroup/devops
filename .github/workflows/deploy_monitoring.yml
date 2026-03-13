@@ -2,7 +2,7 @@ name: deploy_monitoring
 
 on:
   push:
-    branches: [main]
+    branches: [alpOrm]
   workflow_dispatch:
 
 jobs:
