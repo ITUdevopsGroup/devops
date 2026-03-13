@@ -2,14 +2,12 @@ name: build_and_deploy_devops_backend
 
 on:
   push:
-    branches: [main]
+    branches: [alpOrm]
     #branches: [alpMerge2]
     # Publish semver tags as releases.
     tags: ["v*.*.*"]
   pull_request:
-    #branches: [alpMerge2]
-
-    branches: [main]
+    branches: [alpOrm]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -35,6 +33,10 @@ jobs:
           maven-version: 3.9.8
       - name: Test backend
         working-directory: ./devops_backend
+        env:
+          MINITWIT_DB_URL: jdbc:postgresql://ec2-13-60-32-149.eu-north-1.compute.amazonaws.com:5432/minitwit
+          MINITWIT_DB_USER: postgres
+          MINITWIT_DB_PASSWORD: postgres
         run: mvn -B test
 
   test-api:
@@ -206,8 +208,9 @@ jobs:
             docker run -d \
               --name "$CONTAINER" \
               -p 5001:5001 \
-              -e MINITWIT_DB_PATH=/data/minitwit.db \
-              -v minitwit_db:/data \
+              -e MINITWIT_DB_URL=jdbc:postgresql://ec2-13-60-32-149.eu-north-1.compute.amazonaws.com:5432/minitwit \
+               -e MINITWIT_DB_USER=postgres \
+               -e MINITWIT_DB_PASSWORD=postgres \
               --restart unless-stopped \
               "$IMAGE"
 

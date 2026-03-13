@@ -34,8 +34,12 @@ public class Controller {
   private byte[] salt = new byte[16];
 
   private static final Logger log = LogManager.getLogger();
-  private DatabaseService databaseService = new DatabaseService();
+  private final DatabaseService databaseService;
   private ObjectMapper mapper = new ObjectMapper();
+
+  public Controller(DatabaseService databaseService) {
+    this.databaseService = databaseService;
+  }
 
   @PostConstruct
   private void initialize() {

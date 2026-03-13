@@ -2,17 +2,17 @@ name: build_and_deploy_devops_frontend
 
 on:
   push:
-    branches: [main]
+    branches: [alpOrm]
     # Publish semver tags as releases.
     tags: ["v*.*.*"]
   pull_request:
     branches:
-      [main]
+      [alpOrm]
       # branches: [ $default-branch ]
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: registry.hub.docker.com/andersfrimann
-  # github.repository as <account>/<repo>
+
   IMAGE_NAME: devops_frontend
 
 jobs:
