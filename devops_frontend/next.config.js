@@ -4,7 +4,7 @@ const os = require("os");
 const nextConfig = {
   reactStrictMode: false,
   env: {
-    host: "http://ec2-13-51-198-31.eu-north-1.compute.amazonaws.com",
+    host: "http://ec2-16-171-31-204.eu-north-1.compute.amazonaws.com",
     port: "5001",
     portClient: "3000",
   },
