@@ -52,7 +52,7 @@ jobs:
         with:
           registry: registry.hub.docker.com
           username: andersfrimann
-          password: itudevops
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
