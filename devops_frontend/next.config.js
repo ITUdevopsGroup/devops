@@ -1,4 +1,4 @@
-const os = require("os");
+const os = import("os");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

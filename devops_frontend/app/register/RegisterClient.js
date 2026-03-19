@@ -10,24 +10,24 @@ function route(router, path) {
 const host = process.env.NEXT_PUBLIC_API_HOST;
 const port = process.env.NEXT_PUBLIC_API_PORT;
 
-var userForm = null;
-var emailForm = null;
-var passwordForm = null;
-var password2Form = null;
 
 export default function Register() {
   const [errorText, setErrorText] = useState("");
   const [error, setError] = useState(false);
   const [shoudldFetch, setShouldFetch] = useState(false);
   const [dataAPI, setDataAPI] = useState();
+  const [userForm, setUserForm] = useState("");
+  const [emailForm, setEmailForm] = useState("");
+  const [passwordForm, setPasswordForm] = useState("");
+  const [password2Form, setPassword2Form] = useState("");
 
   async function onSubmit(event) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    userForm = formData.get("username");
-    emailForm = formData.get("email");
-    passwordForm = formData.get("password");
-    password2Form = formData.get("password2");
+    setUserForm(formData.get("username"));
+    setEmailForm(formData.get("email"));
+    setPasswordForm(formData.get("password"));
+    setPassword2Form(formData.get("password2"));
     registerUser(userForm, emailForm, passwordForm, password2Form);
   }
 
