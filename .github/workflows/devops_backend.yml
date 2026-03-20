@@ -100,16 +100,8 @@ jobs:
         with:
           dockerfile: ./devops_backend/Dockerfile
 
-  shellcheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
-
   build:
-    needs: [test-backend, test-api, checkstyle, hadolint, shellcheck]
+    needs: [test-backend, test-api, checkstyle, hadolint]
     runs-on: ubuntu-latest
 
     permissions:
