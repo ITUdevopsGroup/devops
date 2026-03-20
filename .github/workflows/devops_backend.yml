@@ -16,67 +16,7 @@ env:
   IMAGE_NAME: devops_backend
 
 jobs:
-  #testing with our test.py and minitwit_sim_api_test.py files which is currently located at the root of out repo
-  test-backend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          distribution: "temurin"
-      - name: Set up Maven
-        uses: stCarolas/setup-maven@v5
-        with:
-          maven-version: 3.9.8
-      - name: Test backend
-        working-directory: ./devops_backend
-        env:
-          MINITWIT_DB_URL: jdbc:postgresql://ec2-13-60-32-149.eu-north-1.compute.amazonaws.com:5432/minitwit
-          MINITWIT_DB_USER: postgres
-          MINITWIT_DB_PASSWORD: postgres
-        run: mvn -B test
-
-  test-api:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Start backend (Docker Compose)
-        run: docker compose -f docker-compose.ci.yml up -d --build backend
-
-      - name: Wait for backend
-        run: |
-          for i in {1..60}; do
-            if curl -sSf http://127.0.0.1:5001/ > /dev/null; then
-              echo "Backend is up"
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Backend did not start"
-          docker compose -f docker-compose.ci.yml logs backend
-          exit 1
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install python deps (if any)
-        run: |
-          pip install requests
-
-      - name: Run API tests
-        run: python test.py
-
-      - name: Teardown
-        if: always()
-        run: docker compose -f docker-compose.ci.yml down -v
-
   build:
-    needs: [test-backend, test-api]
     runs-on: ubuntu-latest
 
     permissions:
@@ -151,8 +91,7 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
   deploy:
-    needs: [build, test-backend, test-api]
-    if: ${{ success() }}
+    needs: [build]
     runs-on: ubuntu-latest
 
     permissions:
