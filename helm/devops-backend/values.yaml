@@ -74,7 +74,7 @@ spec:
           pathType: Prefix
           backend:
           service:
-            name: devops_backend
+            name: devops-backend
             port:
               number: 5002
   tls: []
