@@ -123,7 +123,7 @@ jobs:
           key: ${{ secrets.VAGRANT }}
           port: 22
           source: "./helm"
-          target: "home/ubuntu"
+          target: "/home/ubuntu"
 
       - name: File commands
         uses: appleboy/ssh-action@v1
