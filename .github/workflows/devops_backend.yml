@@ -1,4 +1,4 @@
-name: build_and_deploy_devops_backend
+name: build_and_deploy_backend_kubernetes
 
 on:
   push:
