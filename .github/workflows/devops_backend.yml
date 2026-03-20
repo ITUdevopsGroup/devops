@@ -2,12 +2,12 @@ name: build_and_deploy_devops_backend
 
 on:
   push:
-    branches: [main]
+    branches: [kubernetes]
     #branches: [alpMerge2]
     # Publish semver tags as releases.
     tags: ["v*.*.*"]
   pull_request:
-    branches: [main]
+    branches: [kubernetes]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -174,44 +174,25 @@ jobs:
           fi
         id: extract_branch
 
+      - name: copy file via ssh password
+      uses: appleboy/scp-action@master
+      with:
+        host: ec2-13-48-56-247.eu-north-1.compute.amazonaws.com
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        port: 22
+        source: "./helm"
+        target: "home/ubuntu"
+
       - name: File commands
         uses: appleboy/ssh-action@v1
         with:
-          host: ec2-16-171-31-204.eu-north-1.compute.amazonaws.com
+          host: ec2-13-48-56-247.eu-north-1.compute.amazonaws.com
           username: ubuntu
           key: ${{ secrets.VAGRANT }}
           port: 22
           script: |
             docker login -u andersfrimann -p itudevops
             set -e
-
-            IMAGE="registry.hub.docker.com/andersfrimann/devops_backend:${{ steps.extract_branch.outputs.branch }}"
-            CONTAINER="devops_backend"
-
-            echo "Pulling $IMAGE"
-            docker pull "$IMAGE"
-
-            # Stop/remove our named container if it exists
-            docker stop "$CONTAINER" || true
-            docker rm "$CONTAINER" || true
-
-            # Stop/remove any container that is currently using host port 5001
-            OLD_5001="$(docker ps -q --filter publish=5001)"
-            if [ -n "$OLD_5001" ]; then
-              docker stop $OLD_5001 || true
-              docker rm $OLD_5001 || true
-            fi
-
-            # Create volume if missing
-            docker volume create minitwit_db >/dev/null
-
-            docker run -d \
-              --name "$CONTAINER" \
-              -p 5001:5001 \
-              -e MINITWIT_DB_URL=jdbc:postgresql://ec2-13-60-32-149.eu-north-1.compute.amazonaws.com:5432/minitwit \
-               -e MINITWIT_DB_USER=postgres \
-               -e MINITWIT_DB_PASSWORD=postgres \
-              --restart unless-stopped \
-              "$IMAGE"
-
-            docker ps --filter "name=$CONTAINER"
+            helm upgrade -i devops_backend ./helm/devops_backend
+            sudo rm -r ./helm
