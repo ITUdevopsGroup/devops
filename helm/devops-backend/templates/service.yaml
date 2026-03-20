@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ include "devops-backend.fullname" . }}
   labels:
-    {{- include "devops_backend.labels" . | nindent 4 }}
+    {{- include "devops-backend.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "devops_backend.selectorLabels" . | nindent 4 }}
+    {{- include "devops-backend.selectorLabels" . | nindent 4 }}
