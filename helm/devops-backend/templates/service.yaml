@@ -1,13 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-svc
+  name: {{ include "devops_backend.fullname" . }}
+  labels:
+    {{- include "devops_backend.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.service.type }}
   ports:
-    - port: 5002
-      targetPort: 5002
+    - port: {{ .Values.service.port }}
+      targetPort: http
       protocol: TCP
       name: http
   selector:
-    app: devops-backend
+    {{- include "devops_backend.selectorLabels" . | nindent 4 }}

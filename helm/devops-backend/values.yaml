@@ -76,6 +76,8 @@ httpRoute:
   hostnames:
   - ec2-13-48-56-247.eu-north-1.compute.amazonaws.com,ec2-51-20-41-213.eu-north-1.compute.amazonaws.com
   # List of rules and filters applied.
+  ports:
+    - port: 5002
   rules:
   - matches:
     - path:
