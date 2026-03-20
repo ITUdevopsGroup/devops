@@ -10,10 +10,6 @@ function route(router, path) {
 const host = process.env.NEXT_PUBLIC_API_HOST;
 const port = process.env.NEXT_PUBLIC_API_PORT;
 
-//var userForm = null;
-//var emailForm = null;
-//var passwordForm = null;
-//var password2Form = null;
 
 export default function Register() {
   const [errorText, setErrorText] = useState("");
