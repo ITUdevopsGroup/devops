@@ -56,7 +56,7 @@ service:
   #This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 5002
   targetPort: 5002
-  nodePort: 31438
+  #nodePort: 31438
   
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 # ingress:

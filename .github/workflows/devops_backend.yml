@@ -135,5 +135,5 @@ jobs:
           script: |
             docker login -u andersfrimann -p itudevops
             set -e
-            helm upgrade -i devops-backend /home/ubuntu/helm/devops-backend
+            helm upgrade -i devops_backend /home/ubuntu/helm/devops-backend
             
