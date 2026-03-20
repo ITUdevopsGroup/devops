@@ -136,7 +136,7 @@ jobs:
           python -m playwright install --with-deps chromium
 
       - name: Run frontend tests
-        run: pytest -v test_ui.py
+        run: pytest -v -x test_ui.py
 
       - name: Teardown
         if: always()
