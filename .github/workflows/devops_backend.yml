@@ -122,8 +122,8 @@ jobs:
           username: ubuntu
           key: ${{ secrets.VAGRANT }}
           port: 22
-          source: "./helm"
-          target: "/home/ubuntu"
+          source: "./helm/*"
+          target: "/home/ubuntu/helm"
 
       - name: File commands
         uses: appleboy/ssh-action@v1
@@ -135,5 +135,5 @@ jobs:
           script: |
             docker login -u andersfrimann -p itudevops
             set -e
-            helm upgrade -i devops_backend ./helm/devops-backend
+            helm upgrade -i devops-backend /helm/devops-backend
             sudo rm -r ./helm
