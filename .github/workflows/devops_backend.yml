@@ -66,10 +66,10 @@ jobs:
 
       - name: Install python deps (if any)
         run: |
-          pip install requests
+          pip install pytest requests
 
       - name: Run API tests
-        run: python test.py
+        run: pytest -v -x test.py
 
       - name: Teardown
         if: always()
