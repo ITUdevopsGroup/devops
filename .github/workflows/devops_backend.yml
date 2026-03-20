@@ -96,7 +96,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Hadolint
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@54c9ade14b1daaf772c7278aecc43aa7a74bb9cd
         with:
           dockerfile: ./devops_backend/Dockerfile
 
