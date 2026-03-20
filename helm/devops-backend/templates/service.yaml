@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}-svc
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
     - port: 5002
-      targetPort: http
+      targetPort: 5002
       protocol: TCP
       name: http
   selector:

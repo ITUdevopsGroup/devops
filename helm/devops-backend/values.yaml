@@ -50,38 +50,14 @@ securityContext: {}
   # runAsUser: 1000
 
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
-service: 
-  #This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: ClusterIP   
-  #This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 5002
-  targetPort: 5002
-  #nodePort: 31438
-  
-# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-# ingress:
-#   enabled: true
-#   className: ""
-#   annotations: 
-#     kubernetes.io/ingress.class: nginx
-#     nginx.ingress.kubernetes.io/add-base-url: "true"
-#     nginx.ingress.kubernetes.io/rewrite-target: /$1
-# spec:
-#     # kubernetes.io/tls-acme: "true"
-#   hosts:
-#     - host: ec2-13-48-56-247.eu-north-1.compute.amazonaws.com
-#       paths:
-#         - path: /
-#           pathType: Prefix
-#           backend:
-#           service:
-#             name: devops-backend
-#             port:
-#               number: 5002
-#   tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+# service: 
+#   #This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+#   type: ClusterIP   
+#   #This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+#   port: 5002
+#   targetPort: 5002
+#   #nodePort: 31438
+
 
 # -- Expose the service via gateway-api HTTPRoute
 # Requires Gateway API resources and suitable controller installed within the cluster
