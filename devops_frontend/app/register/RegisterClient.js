@@ -22,15 +22,19 @@ export default function Register() {
   const [password2Form, setPassword2Form] = useState("");
 
 
-  async function onSubmit(event) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    setUserForm(formData.get("username"));
-    setEmailForm(formData.get("email"));
-    setPasswordForm(formData.get("password"));
-    setPassword2Form(formData.get("password2"));
-    registerUser(userForm, emailForm, passwordForm, password2Form);
-  }
+async function onSubmit(event) {
+  event.preventDefault();
+  const formData = new FormData(event.currentTarget);
+  const username = formData.get("username");
+  const email = formData.get("email");
+  const password = formData.get("password");
+  const password2 = formData.get("password2");
+  setUserForm(username);
+  setEmailForm(email);
+  setPasswordForm(password);
+  setPassword2Form(password2);
+  registerUser(username, email, password, password2);
+}
 
   const router = useRouter();
   const params = useSearchParams();
