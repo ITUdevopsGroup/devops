@@ -104,7 +104,7 @@ httpRoute:
   - matches:
       - path:
           type: Exact
-          value: /devops-backend
+          value: /
             #- backendRefs:
             #- name: devops-backend
             #namespace: default
