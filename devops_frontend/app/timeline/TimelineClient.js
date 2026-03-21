@@ -476,7 +476,7 @@ export default function Timeline() {
             ))
           ) : (
             <li>
-              <em>There's no message so far.</em>
+              <em>There is no message so far.</em>
             </li>
           )}
         </ul>

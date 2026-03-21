@@ -75,8 +75,33 @@ jobs:
         if: always()
         run: docker compose -f docker-compose.ci.yml down -v
 
+  checkstyle:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Run Checkstyle
+        working-directory: ./devops_backend
+        run: mvn checkstyle:check
+
+  hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./devops_backend/Dockerfile
+
   build:
-    needs: [test-backend, test-api]
+    needs: [test-backend, test-api, checkstyle, hadolint]
     runs-on: ubuntu-latest
 
     permissions:
