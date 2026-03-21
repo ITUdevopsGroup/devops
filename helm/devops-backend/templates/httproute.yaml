@@ -31,8 +31,8 @@ spec:
       {{- toYaml . | nindent 8 }}
     {{- end }}
       backendRefs:
-        - name: {{ $fullName }}
-          port: {{ $svcPort }}
+        - name: devops-backend
+          port: 5002
           weight: 1
     {{- end }}
 {{- end }}

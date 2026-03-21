@@ -1,0 +1,15 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gateway
+spec:
+  gatewayClassName: nginx
+  listeners:
+  - name: devops-backend
+    port: 5002
+    protocol: HTTP
+    hostname: "*.eu-north-1.compute.amazonaws.com"
+  - name: devops-frontend
+    port: 3002
+    protocol: HTTP
+    hostname: "*.eu-north-1.compute.amazonaws.com"
