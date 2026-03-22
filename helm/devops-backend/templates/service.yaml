@@ -7,7 +7,7 @@ metadata:
 spec:
    ports:
      - name: http
-       port: 31437
+       port: 5002
        targetPort: 5002
        
    selector: 
