@@ -32,7 +32,7 @@ spec:
     {{- end }}
       backendRefs:
         - name: devops-backend
-          port: 30449
+          port: 31023
           weight: 100
     {{- end }}
 {{- end }}

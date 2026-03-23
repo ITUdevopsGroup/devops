@@ -50,12 +50,12 @@ securityContext: {}
   # runAsUser: 1000
 
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
-service: {}
+service: 
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  # type: NodePort  
+  type: ClusterIP  
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  # port: 5001
-  # targetPort: 5001
+  port: 31023
+  targetPort: 31023
 
 # -- Expose the service via gateway-api HTTPRoute
 # Requires Gateway API resources and suitable controller installed within the cluster
