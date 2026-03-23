@@ -5,10 +5,13 @@ metadata:
   labels:
     {{- include "devops_backend.labels" . | nindent 4 }}
 spec:
-   ports:
-     - name: http
-       port: 31023
-       targetPort: 31023
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+
        
    selector: 
       matchLabels:
