@@ -79,7 +79,7 @@ httpRoute:
   - matches:
       - path:
           type: PathPrefix
-          value: /devops-backend
+          value: /
             #- backendRefs:
             #- name: devops-backend
             #namespace: default
