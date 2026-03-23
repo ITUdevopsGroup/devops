@@ -78,7 +78,7 @@ httpRoute:
   rules:
   - matches:
       - path:
-          type: Exact
+          type: PathPrefix
           value: /devops-backend
             #- backendRefs:
             #- name: devops-backend
