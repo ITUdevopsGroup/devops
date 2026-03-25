@@ -445,6 +445,7 @@
       "id": 20,
       "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "DB Active Connections",
+      "description": "Shows how many connections to the database are currently being used. Think of it like phone lines between the app and the database — there is a limited number available.\n\nGreen means plenty of lines are free. Yellow means most are in use and things might start slowing down. Red means almost all lines are busy — new requests may have to wait or fail.",
       "type": "stat",
       "targets": [
         {
@@ -474,6 +475,7 @@
       "id": 21,
       "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "DB Pending Connections",
+      "description": "Shows how many requests are waiting in line for a database connection to become available. This should always be zero.\n\nIf this number is above zero, it means users are actively waiting — the app will feel slow. The higher the number, the longer the wait. This is an early warning sign that the database or connection pool cannot keep up with demand.",
       "type": "stat",
       "targets": [
         {
@@ -503,42 +505,12 @@
       "id": 22,
       "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "DB Connection Timeouts",
+      "description": "Shows the total number of times a request waited too long for a database connection and gave up. Each timeout likely means a user saw an error or a blank page.\n\nThis number should stay at zero. If it starts increasing, it means the database is too slow or there are not enough connections available to handle the traffic.",
       "type": "stat",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "hikaricp_connections_timeout_total",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.1 },
-              { "color": "red", "value": 0.5 }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 29 },
-      "id": 23,
-      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
-      "title": "DB Acquire Time (max)",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "hikaricp_connections_acquire_seconds_max",
           "legendFormat": "",
           "refId": "A"
         }
@@ -557,6 +529,7 @@
       "id": 24,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "Repository Calls per Second",
+      "description": "Shows how often each database operation is being called per second — for example, looking up a user, saving a tweet, or checking followers.\n\nThis is different from HTTP Request Rate by Endpoint. The HTTP panel shows what users are asking for (e.g. one visit to /register). This panel shows what happens behind the scenes in the database as a result — one user request can trigger multiple database operations.\n\nIf a specific operation is called very frequently, it could benefit from caching or optimization.",
       "type": "timeseries",
       "targets": [
         {
@@ -580,6 +553,7 @@
       "id": 25,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "Repository Avg Latency",
+      "description": "Shows the average time each database operation takes to complete.\n\nUse this together with Repository Calls per Second. If an operation is both slow AND called frequently, it is the top priority to fix — it affects the most users.\n\nFor example, if /register is slow, the HTTP panel tells you THAT it is slow. This panel tells you WHY — maybe the 'check if username exists' operation is taking too long and needs a database index.",
       "type": "timeseries",
       "targets": [
         {
@@ -611,6 +585,7 @@
       "id": 30,
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "CPU Usage Over Time",
+      "description": "A timeline showing how CPU usage has changed over time. Unlike the CPU stat panel at the top which only shows the current value, this graph shows the full history.\n\nLook for patterns — does CPU spike at certain times of day? Does it go up when traffic increases? A steadily rising baseline over days or weeks could mean the server is gradually becoming overloaded and may need to be scaled up.",
       "type": "timeseries",
       "targets": [
         {
@@ -634,6 +609,7 @@
       "id": 31,
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "Memory Usage Over Time",
+      "description": "A timeline showing how RAM usage has changed over time. Unlike the Memory stat panel at the top which only shows the current value, this graph shows the full history.\n\nA slowly rising line that never comes back down could indicate a memory leak — the application is using more and more memory without releasing it. Healthy memory usage goes up and down as the application processes requests.",
       "type": "timeseries",
       "targets": [
         {
@@ -657,6 +633,7 @@
       "id": 32,
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "Disk Usage Over Time",
+      "description": "A timeline showing how much disk space is being used over time. Disk usage typically only goes up as logs, database files, and Docker images accumulate.\n\nUse this graph to predict when you might run out of space. If the line is rising steadily, you can estimate when it will hit 100% and plan to clean up old files or expand storage before that happens.",
       "type": "timeseries",
       "targets": [
         {
@@ -680,6 +657,7 @@
       "id": 33,
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "Network Traffic",
+      "description": "Shows how much data is flowing in and out of the server per second.\n\n'In' is data the server receives — user requests, uploads, API calls from the simulator.\n'Out' is data the server sends back — web pages, API responses, images.\n\nA sudden spike could mean a lot of users are active at once, or in worst case a DDoS attack (someone flooding the server with traffic). A drop to zero likely means the server is unreachable or has crashed.",
       "type": "timeseries",
       "targets": [
         {
@@ -709,6 +687,7 @@
       "id": 34,
       "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "JVM Heap Memory",
+      "description": "Shows how much memory the Java application uses while it runs. Every time a user logs in, posts a tweet, or loads a page, the app temporarily stores that data in memory to process it. This panel tracks how much of that memory is being used at any given moment. This is separate from the server's overall RAM — think of it as the app's own personal workspace that only the Java application can use.\n\n'Used' is how much of that workspace is currently occupied. 'Max' is the size of the workspace — the app cannot use more than this.\n\nYou will likely see a repeating pattern where the line rises and then suddenly drops. This is completely normal and healthy — it means the app is cleaning up data it no longer needs (called garbage collection). Think of it like clearing your desk periodically.\n\nHowever, if the 'used' line keeps climbing and stays close to the 'max' line without dropping back down, it means the app is running out of workspace. This will eventually cause a crash.",
       "type": "timeseries",
       "targets": [
         {
@@ -738,6 +717,7 @@
       "id": 35,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "JVM GC Pause Duration",
+      "description": "Shows how much time the Java application spends cleaning up unused memory (called garbage collection). During this cleanup, the application briefly pauses — it cannot respond to any user requests until the cleanup is done.\n\nAll Java applications do this — it is a normal part of how Java manages memory automatically. In practice, these pauses are usually only a few milliseconds long, so short that users never notice them.\n\nThis panel is only a concern if the pauses become long (hundreds of milliseconds) or happen very frequently. That would mean the application is struggling with memory, and users may start experiencing slow page loads or timeouts.",
       "type": "timeseries",
       "targets": [
         {
