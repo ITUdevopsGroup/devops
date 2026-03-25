@@ -37,6 +37,7 @@
       "id": 1,
       "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Backend Status",
+      "description": "Shows whether the backend application is reachable by Prometheus. UP means Prometheus can successfully scrape metrics from the app. If it shows DOWN, the backend may have crashed, be unreachable, or the metrics endpoint is not responding.",
       "type": "stat",
       "targets": [
         {
@@ -67,6 +68,7 @@
       "id": 2,
       "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Request Rate",
+      "description": "Counts how many requests (page loads, API calls, button clicks) the backend receives per second. Think of it as a measure of how busy the system is right now. A sudden spike means many users or bots are using the system at once. A drop to zero likely means nobody can reach the app — something may be broken.",
       "type": "stat",
       "targets": [
         {
@@ -98,11 +100,12 @@
       "id": 3,
       "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Error Rate (5xx)",
+      "description": "Shows how many requests are failing because of a problem on the server — for example, a crash or a bug in the code. This is never the user's fault. Green means things are running smoothly. Yellow means a small number of requests are failing and it's worth keeping an eye on. Red means something is seriously wrong and users are being affected right now.",
       "type": "stat",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[1m])) / sum(rate(http_server_requests_seconds_count[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[1m])) / sum(rate(http_server_requests_seconds_count[1m])) or vector(0)",
           "legendFormat": "",
           "refId": "A"
         }
@@ -131,6 +134,7 @@
       "id": 4,
       "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "CPU Usage",
+      "description": "Shows how much of the server's processing power is being used right now. Think of it like how hard the server's brain is working. Green means it has plenty of capacity. Yellow means it's getting busy and performance might start to slow down. Red means the server is struggling and users may experience slow responses or timeouts.",
       "type": "stat",
       "targets": [
         {
@@ -164,6 +168,7 @@
       "id": 5,
       "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Memory Usage",
+      "description": "Shows how much of the server's memory (RAM) is being used. Think of it like how full the server's short-term workspace is. Green means there is plenty of room. Yellow means it's getting crowded and things might slow down. Red means the server could start forcefully shutting down processes to free up space, which may cause crashes or downtime.",
       "type": "stat",
       "targets": [
         {
@@ -205,6 +210,7 @@
         "text": {}
       },
       "title": "Disk Usage",
+      "description": "Shows how much of the server's hard drive is filled up, displayed as a bar. If the disk gets full, the application can no longer save data, write logs, or store anything — which will cause crashes. Keep an eye on this if your database or log files are growing.",
       "type": "bargauge",
       "targets": [
         {
@@ -323,7 +329,7 @@
       "id": 10,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "HTTP Request Rate by Endpoint",
-      "type": "timeseries",
+      "description": "Shows how many requests per second each part of the application receives.\n\nWhat each endpoint does:\n\n/ — The front page or health check, used to verify the backend is running.\n\n/user — Fetches user info, e.g. during login.\n\n/register — Creates a new user account.\n\n/spec_user — Loads a specific user's profile page.\n\n/is_followed — Checks if one user follows another, used to display the follow/unfollow button correctly.\n\n/follow and /unfollow — Follow or unfollow a user.\n\n/add_message — Posts a new tweet/message.\n\n/stats — Returns application statistics.\n\n/latest — Called constantly by the course simulator (not real users). It tracks how far the simulator has progressed. This endpoint will likely have the most traffic.",
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
@@ -346,6 +352,7 @@
       "id": 11,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "Response Time p99 by Endpoint",
+      "description": "Shows the response time for the slowest 1% of requests on each endpoint. For example, if 100 users visit /timeline, this shows how long the slowest user had to wait. This is important because the average can look fine even when some users are having a terrible experience.\n\nWhat each endpoint does:\n\n/ — The front page or health check.\n\n/user — Fetches user info, e.g. during login.\n\n/register — Creates a new user account.\n\n/spec_user — Loads a specific user's profile page.\n\n/is_followed — Checks if one user follows another.\n\n/follow and /unfollow — Follow or unfollow a user.\n\n/add_message — Posts a new tweet/message.\n\n/stats — Returns application statistics.\n\n/latest — Called constantly by the course simulator (not real users).\n\n",
       "type": "timeseries",
       "targets": [
         {
@@ -369,6 +376,7 @@
       "id": 12,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "HTTP Errors by Status Code",
+      "description": "Shows how many errors are happening per second, broken down by status code and endpoint. This helps you pinpoint exactly where problems are occurring.\n\nCommon status codes:\n\n400 Bad Request — The request was malformed, e.g. missing a required field.\n\n401 Unauthorized — The user is not logged in or their session has expired.\n\n403 Forbidden — The user is logged in but not allowed to do this action.\n\n404 Not Found — The page or resource doesn't exist, e.g. a user profile that was deleted.\n\n409 Conflict — A duplicate action, e.g. trying to register a username that already exists.\n\n500 Internal Server Error — Something crashed on the server, usually a bug in the code.\n\n503 Service Unavailable — The server is overloaded or temporarily down.\n\nIf you see a spike on a specific endpoint, check the status code to understand what kind of error users are hitting.",
       "type": "timeseries",
       "targets": [
         {
@@ -392,6 +400,7 @@
       "id": 13,
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
       "title": "Response Time p50 vs p99",
+      "description": "Compares two response time measurements across all endpoints combined.\n\np50 (median) — The response time that a typical user experiences. Half of all requests are faster than this, half are slower.\n\np99 — The response time for the slowest 1% of requests. This is what your worst-off users experience.\n\nA big gap between the two lines means some users are having a much worse experience than most. Ideally both lines stay low and close together.\n\n",
       "type": "timeseries",
       "targets": [
         {
