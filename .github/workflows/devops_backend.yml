@@ -36,7 +36,7 @@ jobs:
         env:
           MINITWIT_DB_URL: jdbc:postgresql://ec2-13-60-32-149.eu-north-1.compute.amazonaws.com:5432/minitwit
           MINITWIT_DB_USER: postgres
-          MINITWIT_DB_PASSWORD: postgres
+          MINITWIT_DB_PASSWORD: ${{ secrets.MINITWIT_DB_PASSWORD }}
         run: mvn -B test
 
   test-api:
@@ -66,17 +66,42 @@ jobs:
 
       - name: Install python deps (if any)
         run: |
-          pip install requests
+          pip install pytest requests
 
       - name: Run API tests
-        run: python test.py
+        run: pytest -v -x test.py
 
       - name: Teardown
         if: always()
         run: docker compose -f docker-compose.ci.yml down -v
 
+  checkstyle:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Run Checkstyle
+        working-directory: ./devops_backend
+        run: mvn checkstyle:check
+
+  hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./devops_backend/Dockerfile
+
   build:
-    needs: [test-backend, test-api]
+    needs: [test-backend, test-api, checkstyle, hadolint]
     runs-on: ubuntu-latest
 
     permissions:
@@ -112,7 +137,7 @@ jobs:
         with:
           registry: registry.hub.docker.com
           username: andersfrimann
-          password: itudevops
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
@@ -207,6 +232,8 @@ jobs:
 
             docker run -d \
               --name "$CONTAINER" \
+              --network devopsminitwit_default \
+              --network-alias backend \
               -p 5001:5001 \
               -e MINITWIT_DB_URL=jdbc:postgresql://ec2-13-60-32-149.eu-north-1.compute.amazonaws.com:5432/minitwit \
                -e MINITWIT_DB_USER=postgres \
