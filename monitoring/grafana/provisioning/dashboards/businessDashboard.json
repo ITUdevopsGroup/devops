@@ -37,7 +37,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_users_total",
+          "expr": "minitwit_users",
           "legendFormat": "",
           "refId": "A"
         }
@@ -65,7 +65,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_messages_total",
+          "expr": "minitwit_messages",
           "legendFormat": "",
           "refId": "A"
         }
@@ -93,7 +93,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_follows_total",
+          "expr": "minitwit_follows",
           "legendFormat": "",
           "refId": "A"
         }
@@ -151,7 +151,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_users_total",
+          "expr": "minitwit_users",
           "legendFormat": "Users",
           "refId": "A"
         }
@@ -173,13 +173,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_messages_total",
+          "expr": "minitwit_messages",
           "legendFormat": "Messages",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_follows_total",
+          "expr": "minitwit_follows",
           "legendFormat": "Follows",
           "refId": "B"
         }
