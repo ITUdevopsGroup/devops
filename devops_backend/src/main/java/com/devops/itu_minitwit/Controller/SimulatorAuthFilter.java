@@ -2,6 +2,8 @@ package com.devops.itu_minitwit.Controller;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -17,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SimulatorAuthFilter implements Filter {
-
+  private static final Logger log = LoggerFactory.getLogger(SimulatorAuthFilter.class);
   private static final String EXPECTED = "Basic c2ltdWxhdG9yOnN1cGVyX3NhZmUh";
 
   @Override
@@ -28,17 +30,19 @@ public class SimulatorAuthFilter implements Filter {
     HttpServletResponse response = (HttpServletResponse) res;
 
     String path = request.getRequestURI();
-
     boolean protectedPath = path.startsWith("/msgs") || path.startsWith("/fllws");
 
     if (protectedPath) {
       String auth = request.getHeader("Authorization");
+
       if (auth == null || !auth.equals(EXPECTED)) {
+        log.warn("Forbidden request path={} method={} remoteAddr={}",
+            path, request.getMethod(), request.getRemoteAddr());
+
         response.setStatus(403);
         response.setContentType("application/json");
         response.getWriter().write(
-            "{\"status\":403,\"error_msg\":\"You are not authorized to use this resource!\"}"
-        );
+            "{\"status\":403,\"error_msg\":\"You are not authorized to use this resource!\"}");
         return;
       }
     }

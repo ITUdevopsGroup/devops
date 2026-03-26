@@ -47,90 +47,130 @@ public class Controller {
 
   @GetMapping("/")
   public String index() throws JsonProcessingException {
-    log.info("GET: /");
+    log.info("Request: GET /");
+
     PublicDataContainer data = databaseService.getPublicData();
     String result = mapper.writeValueAsString(data);
+    log.info("Response ready for GET /");
+
     return result;
   }
 
   @RequestMapping(value = "user", method = RequestMethod.GET)
-  public @ResponseBody String getUserData(@RequestParam("user") String sessionUser,
+  public @ResponseBody String getUserData(
+      @RequestParam("user") String sessionUser,
       @RequestParam("profile") String profile) throws JsonProcessingException {
 
-    log.info("GET: /user");
     int sessionUserProcessed = -1;
-    if (!sessionUser.equals("null"))
+    if (!sessionUser.equals("null")) {
       sessionUserProcessed = Integer.parseInt(sessionUser);
+    }
+
+    log.info("Request: GET /user profile={} sessionUser={}", profile, sessionUserProcessed);
+
     PublicDataContainer data = databaseService.getUserData(sessionUserProcessed, profile);
     String result = mapper.writeValueAsString(data);
-    log.info(result);
+
+    log.info("Success: GET /user profile={}", profile);
     return result;
   }
 
   @RequestMapping(value = "register", method = RequestMethod.GET)
-  public @ResponseBody ResultContainer registerUser(@RequestParam("user") String userId,
-      @RequestParam("email") String email, @RequestParam("password") String password)
-      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
-    log.info("GET: /register");
-    KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
-    SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-    byte[] hash = f.generateSecret(spec).getEncoded();
-    return databaseService.registerNewUser(userId, email, enc.encodeToString(hash));
-  }
-
-  @RequestMapping(value = "spec_user", method = RequestMethod.GET)
-  public @ResponseBody String getSpecUser(@RequestParam("user") String profile,
+  public @ResponseBody ResultContainer registerUser(
+      @RequestParam("user") String userId,
+      @RequestParam("email") String email,
       @RequestParam("password") String password)
       throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
 
-    log.info("GET: /spec_user");
+    log.info("Request: GET /register user={}", userId);
+
     KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
     SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
     byte[] hash = f.generateSecret(spec).getEncoded();
+
+    ResultContainer result = databaseService.registerNewUser(userId, email, enc.encodeToString(hash));
+    log.info("Success: register user={}", userId);
+    return result;
+  }
+
+  @RequestMapping(value = "spec_user", method = RequestMethod.GET)
+  public @ResponseBody String getSpecUser(
+      @RequestParam("user") String profile,
+      @RequestParam("password") String password)
+      throws JsonProcessingException, NoSuchAlgorithmException, InvalidKeySpecException {
+
+    log.info("Request: GET /spec_user user={}", profile);
+
+    KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+    SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+    byte[] hash = f.generateSecret(spec).getEncoded();
+
     UserDataContainer data = databaseService.getSpecificUserData(profile, enc.encodeToString(hash));
     String result = mapper.writeValueAsString(data);
-    log.info(result);
+
+    log.info("Success: GET /spec_user user={}", profile);
     return result;
   }
 
   @RequestMapping(value = "is_followed", method = RequestMethod.GET)
-  public @ResponseBody String isFollowed(@RequestParam("user") int userId, @RequestParam("profile") String profile)
-      throws JsonProcessingException {
-    log.info("GET: /is_followed");
+  public @ResponseBody String isFollowed(
+      @RequestParam("user") int userId,
+      @RequestParam("profile") String profile) throws JsonProcessingException {
+
+    log.info("Request: GET /is_followed userId={} profile={}", userId, profile);
+
     ResultContainer data = databaseService.isFollowed(userId, profile);
     String result = mapper.writeValueAsString(data);
-    log.info(result);
+
+    log.info("Success: GET /is_followed userId={} profile={}", userId, profile);
     return result;
   }
 
   @RequestMapping(value = "follow", method = RequestMethod.GET)
-  public @ResponseBody String follow(@RequestParam("user") String userId, @RequestParam("profile") String profile)
-      throws JsonProcessingException {
-    log.info("GET: /follow");
+  public @ResponseBody String follow(
+      @RequestParam("user") String userId,
+      @RequestParam("profile") String profile) throws JsonProcessingException {
+
+    log.info("Action: follow requester={} target={}", userId, profile);
+
     ResultContainer data = databaseService.follow(userId, profile);
     String result = mapper.writeValueAsString(data);
-    log.info(result);
+
+    log.info("Success: follow requester={} target={}", userId, profile);
     return result;
   }
 
   @RequestMapping(value = "unfollow", method = RequestMethod.GET)
-  public @ResponseBody String unfollow(@RequestParam("user") String userId, @RequestParam("profile") String profile)
-      throws JsonProcessingException {
-    log.info("GET: /unfollow");
+  public @ResponseBody String unfollow(
+      @RequestParam("user") String userId,
+      @RequestParam("profile") String profile) throws JsonProcessingException {
+
+    log.info("Action: unfollow requester={} target={}", userId, profile);
+
     ResultContainer data = databaseService.unFollow(userId, profile);
     String result = mapper.writeValueAsString(data);
-    log.info(result);
+
+    log.info("Success: unfollow requester={} target={}", userId, profile);
     return result;
   }
 
   @RequestMapping(value = "add_message", method = RequestMethod.GET)
-  public @ResponseBody String addMessag(@RequestParam("user") String userId, @RequestParam("text") String text,
-      @RequestParam("pubDate") String pubDate, @RequestParam("flagged") String flagged) throws JsonProcessingException {
-    log.info("GET: /add_message");
-    // int dateFormatted = Integer.parseInt(pubDate);
+  public @ResponseBody String addMessag(
+      @RequestParam("user") String userId,
+      @RequestParam("text") String text,
+      @RequestParam("pubDate") String pubDate,
+      @RequestParam("flagged") String flagged) throws JsonProcessingException {
+
+    log.info("Action: add_message user={} textLength={} flagged={} pubDate={}",
+        userId,
+        text == null ? 0 : text.length(),
+        flagged,
+        pubDate);
+
     ResultContainer data = databaseService.addMessage(userId, text, pubDate, flagged);
     String result = mapper.writeValueAsString(data);
-    log.info(result);
+
+    log.info("Success: add_message user={}", userId);
     return result;
   }
 
@@ -139,7 +179,10 @@ public class Controller {
     int total = databaseService.getTotalMessageCount();
     int totalUsers = databaseService.getTotalUserCount();
 
-    return mapper.writeValueAsString(java.util.Map.of("totalMessages", total,
+    log.info("Request: GET /stats totalMessages={} totalUsers={}", total, totalUsers);
+
+    return mapper.writeValueAsString(java.util.Map.of(
+        "totalMessages", total,
         "totalUsers", totalUsers));
   }
 
