@@ -2,6 +2,8 @@ package com.devops.itu_minitwit.Controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +21,7 @@ import com.devops.itu_minitwit.store.Store;
 @RestController
 @RequestMapping("/msgs")
 public class MsgsController {
-
+  private static final Logger log = LoggerFactory.getLogger(MsgsController.class);
   private final Store store;
 
   public MsgsController(Store store) {
@@ -28,24 +30,32 @@ public class MsgsController {
 
   @GetMapping
   public List<MessageResponse> getMsgs(
-      @RequestParam(name="no", defaultValue="100") int no,
-      @RequestParam(name="latest", required=false) Long latest
-  ) {
-    if (latest != null) store.setLatest(latest);
+      @RequestParam(name = "no", defaultValue = "100") int no,
+      @RequestParam(name = "latest", required = false) Long latest) {
+    if (latest != null) {
+      store.setLatest(latest);
+    }
+
+    log.info("Request: GET /msgs no={} latest={}", no, latest);
     return store.getMessages(no);
   }
 
   @GetMapping("/{username}")
   public List<MessageResponse> getMsgsByUser(
       @PathVariable("username") String username,
-      @RequestParam(name="no", defaultValue="100") int no,
-      @RequestParam(name="latest", required=false) Long latest
-  ) {
-    if (latest != null) store.setLatest(latest);
-    // simulator expects 404 if user not found (optional for your tests, but good)
+      @RequestParam(name = "no", defaultValue = "100") int no,
+      @RequestParam(name = "latest", required = false) Long latest) {
+    if (latest != null) {
+      store.setLatest(latest);
+    }
+
+    log.info("Request: GET /msgs/{} no={} latest={}", username, no, latest);
+
     if (!store.userExists(username)) {
+      log.warn("User not found for GET /msgs/{}", username);
       throw new UserNotFound();
     }
+
     return store.getMessagesByUser(username, no);
   }
 
@@ -54,16 +64,29 @@ public class MsgsController {
   public void postMsg(
       @PathVariable("username") String username,
       @RequestBody PostMessage payload,
-      @RequestParam(name="latest", required=false) Long latest
-  ) {
-    if (latest != null) store.setLatest(latest);
+      @RequestParam(name = "latest", required = false) Long latest) {
+    if (latest != null) {
+      store.setLatest(latest);
+    }
+
     if (!store.userExists(username)) {
+      log.warn("User not found for POST /msgs/{}", username);
       throw new UserNotFound();
     }
-    if (payload.getContent() == null) payload.setContent("");
+
+    if (payload.getContent() == null) {
+      payload.setContent("");
+    }
+
+    log.info("Action: post message user={} contentLength={} latest={}",
+        username, payload.getContent().length(), latest);
+
     store.addMessage(username, payload.getContent());
+
+    log.info("Success: message posted user={}", username);
   }
 
   @ResponseStatus(HttpStatus.NOT_FOUND)
-  private static class UserNotFound extends RuntimeException {}
+  private static class UserNotFound extends RuntimeException {
+  }
 }
