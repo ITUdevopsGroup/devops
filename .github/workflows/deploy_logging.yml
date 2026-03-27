@@ -1,0 +1,62 @@
+name: deploy_logging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy logging files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ec2-13-60-32-149.eu-north-1.compute.amazonaws.com
+          username: ubuntu
+          key: ${{ secrets.VAGRANT }}
+          port: 22
+          source: "monitoring/loki-config.yaml,monitoring/alloy-config.alloy"
+          target: "/home/ubuntu/devopsminitwit"
+
+      - name: Start logging stack
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ec2-13-60-32-149.eu-north-1.compute.amazonaws.com
+          username: ubuntu
+          key: ${{ secrets.VAGRANT }}
+          port: 22
+          script: |
+            set -e
+            cd /home/ubuntu/devopsminitwit
+
+            docker network create devopsminitwit_default >/dev/null 2>&1 || true
+
+            docker stop loki alloy || true
+            docker rm loki alloy || true
+
+            docker run -d \
+              --name loki \
+              --network devopsminitwit_default \
+              -p 3100:3100 \
+              -v /home/ubuntu/devopsminitwit/monitoring/loki-config.yaml:/etc/loki/config.yaml:ro \
+              --restart unless-stopped \
+              grafana/loki:3.6.0 \
+              -config.file=/etc/loki/config.yaml
+
+            docker run -d \
+              --name alloy \
+              --network devopsminitwit_default \
+              -p 12345:12345 \
+              -v /home/ubuntu/devopsminitwit/monitoring/alloy-config.alloy:/etc/alloy/config.alloy:ro \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              --restart unless-stopped \
+              grafana/alloy:latest \
+              run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345
+
+            docker ps --filter "name=loki"
+            docker ps --filter "name=alloy"
