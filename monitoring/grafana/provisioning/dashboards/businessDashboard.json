@@ -127,7 +127,6 @@
         }
       ]
     },
-
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
@@ -185,7 +184,6 @@
         }
       ]
     },
-
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
@@ -329,6 +327,96 @@
           "expr": "rate(spring_data_repository_invocations_seconds_count{repository=\"FollowerRepository\",method=\"deleteById\"}[5m])",
           "legendFormat": "Unfollows",
           "refId": "B"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "id": 103,
+      "title": "🏆 Top Profiles",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Username" },
+            "properties": [
+              { "id": "custom.width", "value": 200 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Followers" },
+            "properties": [
+              { "id": "custom.width", "value": 100 }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 28 },
+      "id": 30,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": { "show": false, "reducer": ["sum"], "fields": "" },
+        "sortBy": [
+          { "displayName": "Followers", "desc": true }
+        ]
+      },
+      "title": "Top 10 Profiles by Followers",
+      "description": "The 10 users with the most followers on the platform, updated every 5 minutes.",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": ["lastNotNull"],
+            "labelsToFields": true
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Field": true },
+            "renameByName": {
+              "username": "Username",
+              "Last *": "Followers"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              { "field": "Followers", "desc": true }
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
+          "expr": "minitwit_top_followers",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
         }
       ]
     }
