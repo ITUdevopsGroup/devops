@@ -354,20 +354,7 @@
             "inspect": false
           }
         },
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "Username" },
-            "properties": [
-              { "id": "custom.width", "value": 200 }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "Followers" },
-            "properties": [
-              { "id": "custom.width", "value": 100 }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": { "h": 10, "w": 12, "x": 0, "y": 28 },
       "id": 30,
@@ -376,7 +363,7 @@
         "cellHeight": "sm",
         "footer": { "show": false, "reducer": ["sum"], "fields": "" },
         "sortBy": [
-          { "displayName": "Followers", "desc": true }
+          { "displayName": "Value", "desc": true }
         ]
       },
       "title": "Top 10 Profiles by Followers",
@@ -384,28 +371,26 @@
       "type": "table",
       "transformations": [
         {
-          "id": "reduce",
+          "id": "sortBy",
           "options": {
-            "reducers": ["lastNotNull"],
-            "labelsToFields": true
+            "sort": [
+              { "field": "Value", "desc": true }
+            ]
           }
         },
         {
           "id": "organize",
           "options": {
-            "excludeByName": { "Field": true },
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true
+            },
             "renameByName": {
               "username": "Username",
-              "Last *": "Followers"
+              "Value": "Followers"
             }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "sort": [
-              { "field": "Followers", "desc": true }
-            ]
           }
         }
       ],
