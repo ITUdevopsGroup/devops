@@ -37,7 +37,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_users_total",
+          "expr": "minitwit_users",
           "legendFormat": "",
           "refId": "A"
         }
@@ -65,7 +65,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_messages_total",
+          "expr": "minitwit_messages",
           "legendFormat": "",
           "refId": "A"
         }
@@ -93,7 +93,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_follows_total",
+          "expr": "minitwit_follows",
           "legendFormat": "",
           "refId": "A"
         }
@@ -151,7 +151,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_users_total",
+          "expr": "minitwit_users",
           "legendFormat": "Users",
           "refId": "A"
         }
@@ -173,13 +173,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_messages_total",
+          "expr": "minitwit_messages",
           "legendFormat": "Messages",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "minitwit_follows_total",
+          "expr": "minitwit_follows",
           "legendFormat": "Follows",
           "refId": "B"
         }
@@ -328,89 +328,6 @@
           "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
           "expr": "rate(spring_data_repository_invocations_seconds_count{repository=\"FollowerRepository\",method=\"deleteById\"}[5m])",
           "legendFormat": "Unfollows",
-          "refId": "B"
-        }
-      ]
-    },
-
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
-      "id": 103,
-      "title": "🔍 API Usage",
-      "type": "row"
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
-      "id": 30,
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
-      "title": "API Endpoint Popularity",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "sum by (uri) (rate(http_server_requests_seconds_count{uri!~\"/actuator.*\"}[5m]))",
-          "legendFormat": "{{uri}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
-      "id": 31,
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
-      "title": "Failed Requests (Client Errors)",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "sum by (status, uri) (rate(http_server_requests_seconds_count{status=~\"4..\",uri!~\"/actuator.*\"}[5m]))",
-          "legendFormat": "{{status}} {{uri}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 36 },
-      "id": 32,
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
-      "title": "User Lookups (Profile Views)",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "rate(spring_data_repository_invocations_seconds_count{repository=\"UserRepository\",method=\"findByUsername\"}[5m])",
-          "legendFormat": "Profile lookups",
-          "refId": "A"
-        },
-        {
-          "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
-          "expr": "rate(spring_data_repository_invocations_seconds_count{repository=\"UserRepository\",method=\"existsByUsername\"}[5m])",
-          "legendFormat": "Username checks (registrations)",
           "refId": "B"
         }
       ]
