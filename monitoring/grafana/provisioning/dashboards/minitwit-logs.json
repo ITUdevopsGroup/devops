@@ -55,7 +55,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{service=\"devops-backend-1\"}",
+          "expr": "{service=~\".*backend.*\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -98,7 +98,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{service=\"devops-backend-1\"} |= \"WARN\"",
+          "expr": "{service=~\".*backend.*\"} |= \"WARN\"",
           "queryType": "range",
           "refId": "A"
         }
@@ -141,7 +141,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{service=\"devops-backend-1\"} |= \"ERROR\"",
+          "expr": "{service=~\".*backend.*\"} |= \"ERROR\"",
           "queryType": "range",
           "refId": "A"
         }
@@ -184,7 +184,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{service=\"devops-backend-1\"} |= \"follow\"",
+          "expr": "{service=~\".*backend.*\"} |= \"follow\"",
           "queryType": "range",
           "refId": "A"
         }
@@ -227,7 +227,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{service=\"devops-backend-1\"} |= \"/msgs\"",
+          "expr": "{service=~\".*backend.*\"} |= \"/msgs\"",
           "queryType": "range",
           "refId": "A"
         }
@@ -325,7 +325,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "sum(count_over_time({service=\"devops-backend-1\"} |= \"ERROR\" [5m]))",
+          "expr": "sum(count_over_time({service=~\".*backend.*\"} |= \"ERROR\" [5m]))",
           "queryType": "range",
           "refId": "A"
         }
@@ -423,7 +423,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "sum(count_over_time({service=\"devops-backend-1\"} |= \"WARN\" [5m]))",
+          "expr": "sum(count_over_time({service=~\".*backend.*\"} |= \"WARN\" [5m]))",
           "queryType": "range",
           "refId": "A"
         }
@@ -466,7 +466,7 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{service=\"devops-backend-1\"} |= \"/register\"",
+          "expr": "{service=~\".*backend.*\"} |= \"/register\"",
           "queryType": "range",
           "refId": "A"
         }
