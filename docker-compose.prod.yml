@@ -19,7 +19,7 @@ services:
       - db_data_prod:/var/lib/postgresql/data
       
   frontend:
-    build: andersfrimann/devops_frontend:main
+    image: andersfrimann/devops_frontend:main
     ports:
       - "3000:3000"
     environment:
