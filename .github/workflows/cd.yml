@@ -1,0 +1,43 @@
+name: deploy_all
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for both builds
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA=${{ github.event.workflow_run.head_sha }}
+          for wf in "devops_frontend" "devops_backend"; do
+            while true; do
+              RUNNING=$(gh run list --repo ${{ github.repository }} \
+                --workflow "$wf" --branch main \
+                --json headSha,status \
+                --jq "[.[] | select(.headSha == \"$SHA\" and (.status == \"in_progress\" or .status == \"queued\"))] | length")
+              
+              if [ "$RUNNING" = "0" ]; then
+                echo "$wf done."
+                break
+              fi
+              echo "$wf still running, waiting 15s..."
+              sleep 15
+            done
+          done
+      
+      - name: Update prod
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 167.172.111.97
+          username: root
+          key: ${{ secrets.SSH_KEY_FOR_DEPLOYMENT }}
+          port: 22
+          script: |
+            cd /root/devops
+            git pull
+            docker compose -f docker-compose.prod.yml up -d --pull always --force-recreate
