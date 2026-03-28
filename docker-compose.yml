@@ -12,9 +12,6 @@ services:
   frontend:
     build:
       context: ./devops_frontend
-      args:
-        NEXT_PUBLIC_API_HOST: "http://localhost"
-        NEXT_PUBLIC_API_PORT: "5001"
     ports:
       - "3000:3000"
     environment:
