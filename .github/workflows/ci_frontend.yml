@@ -1,4 +1,4 @@
-name: devops_frontend
+name: ci_frontend
 
 on:
   push:
@@ -161,56 +161,3 @@ jobs:
         # This step uses the identity token to provision an ephemeral certificate
         # against the sigstore community Fulcio instance.
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [build, test-frontend]
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Extract branch name
-        shell: bash
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "branch=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          else
-            echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" | tr / - >> $GITHUB_OUTPUT
-          fi
-        id: extract_branch
-
-      - name: File commands
-        uses: appleboy/ssh-action@v1
-        with:
-          host: 167.172.111.97
-          username: ubuntu
-          key: ${{ secrets.VAGRANT }}
-          port: 22
-          script: |
-            docker login -u andersfrimann -p itudevops
-
-
-            docker stop $(cat devops_frontend.pid) 2>/dev/null || true
-            docker rm $(cat devops_frontend.pid) 2>/dev/null || true
-            rm -f devops_frontend.pid
-
-
-            docker image rm -f registry.hub.docker.com/andersfrimann/devops_frontend:${{steps.extract_branch.outputs.branch}} 2>/dev/null || true
-            docker system prune -a -f
-
-            docker image pull registry.hub.docker.com/andersfrimann/devops_frontend:${{steps.extract_branch.outputs.branch}}
-
-
-            docker run -d \
-              --name devops_frontend \
-              -p 3000:3000 \
-              -e NEXT_PUBLIC_API_HOST="http://167.172.111.97" \
-              -e NEXT_PUBLIC_API_PORT="5001" \
-              --restart unless-stopped \
-              registry.hub.docker.com/andersfrimann/devops_frontend:${{ steps.extract_branch.outputs.branch }} > devops_frontend.pid
