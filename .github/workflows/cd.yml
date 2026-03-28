@@ -9,26 +9,33 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for both builds
+      - name: Wait for all workflows
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           SHA=${{ github.event.workflow_run.head_sha }}
-          sleep 60
-          for wf in "ci_frontend" "ci_backend"; do
-            while true; do
-              RUNNING=$(gh run list --repo ${{ github.repository }} \
-                --workflow "$wf" --branch main \
-                --json headSha,status \
-                --jq "[.[] | select(.headSha == \"$SHA\" and (.status == \"in_progress\" or .status == \"queued\"))] | length")
-              
-              if [ "$RUNNING" = "0" ]; then
-                echo "$wf done."
-                break
-              fi
-              echo "$wf still running, waiting 15s..."
-              sleep 15
-            done
+          TIMEOUT=600
+          ELAPSED=0
+          
+          while true; do
+            if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+              echo "Timed out, proceeding anyway."
+              break
+            fi
+            
+            RUNNING=$(gh run list --repo ${{ github.repository }} \
+            --branch main \
+            --json headSha,status,databaseId \
+            --jq "[.[] | select(.headSha == \"$SHA\" and .databaseId != ${{ github.run_id }} and (.status == \"in_progress\" or .status == \"queued\"))] | length")
+            
+            if [ "$RUNNING" = "0" ]; then
+              echo "All workflows for $SHA completed."
+              break
+            fi
+            
+            echo "$RUNNING workflow(s) still running, waiting 15s..."
+            sleep 15
+            ELAPSED=$((ELAPSED + 15))
           done
       
       - name: Update prod
