@@ -1,24 +1,29 @@
 services:
   backend:
-    build:
-      context: ./devops_backend
+    image: andersfrimann/devops_backend:main
     ports:
       - "5001:5001"
     environment:
-      MINITWIT_DB_URL: jdbc:postgresql://ec2-13-60-32-149.eu-north-1.compute.amazonaws.com:5432/minitwit
-      MINITWIT_DB_USER: postgres
-      MINITWIT_DB_PASSWORD: postgres
+      MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
+      MINITWIT_DB_USER: minitwit_user
+      MINITWIT_DB_PASSWORD: minitwit_password
 
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: minitwit
+      POSTGRES_USER: minitwit_user
+      POSTGRES_PASSWORD: minitwit_password
+    volumes:
+      - db_data_prod:/var/lib/postgresql/data
+      
   frontend:
-    build:
-      context: ./devops_frontend
-      args:
-        NEXT_PUBLIC_API_HOST: "http://localhost"
-        NEXT_PUBLIC_API_PORT: "5001"
+    build: andersfrimann/devops_frontend:main
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_HOST: "http://localhost"
+      NEXT_PUBLIC_API_HOST: "http://167.172.111.97"
       NEXT_PUBLIC_API_PORT: "5001"
     depends_on:
       - backend
@@ -80,7 +85,7 @@ services:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_SECURITY_ADMIN_PASSWORD=devops123
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
@@ -93,3 +98,4 @@ volumes:
   prometheus_data:
   grafana_data:
   loki_data:
+  db_data_prod:
