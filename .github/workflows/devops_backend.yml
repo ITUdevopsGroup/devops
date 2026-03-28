@@ -34,7 +34,7 @@ jobs:
       - name: Test backend
         working-directory: ./devops_backend
         env:
-          MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
+          MINITWIT_DB_URL: jdbc:postgresql://167.172.111.97:5432/minitwit
           MINITWIT_DB_USER: minitwit_user
           MINITWIT_DB_PASSWORD: minitwit_password
         run: mvn -B test
