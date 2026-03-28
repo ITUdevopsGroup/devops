@@ -13,9 +13,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          SHA=${{ github.event.workflow_run.head_sha }}
+          SHA=${{ github.event.workflow_run.head_sha || github.sha }}
           TIMEOUT=600
           ELAPSED=0
+
+
+          echo SHA=$SHA
           
           while true; do
             if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
