@@ -14,7 +14,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           SHA=${{ github.event.workflow_run.head_sha }}
-          for wf in "devops_frontend" "devops_backend"; do
+          for wf in "ci_frontend" "ci_backend"; do
             while true; do
               RUNNING=$(gh run list --repo ${{ github.repository }} \
                 --workflow "$wf" --branch main \
