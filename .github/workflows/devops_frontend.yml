@@ -62,7 +62,7 @@ jobs:
           python -m playwright install --with-deps chromium
 
       - name: Run frontend tests
-        run: ehco "we need to fix this at some point TODO" ##pytest -v -x test_ui.py
+        run: echo "we need to fix this at some point TODO" ##pytest -v -x test_ui.py
 
       - name: Teardown
         if: always()
