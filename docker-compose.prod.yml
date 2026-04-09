@@ -1,5 +1,7 @@
 services:
   backend:
+    depends_on:
+      - db     
     image: andersfrimann/devops_backend:main
     ports:
       - "5001:5001"
