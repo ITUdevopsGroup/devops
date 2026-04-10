@@ -8,7 +8,7 @@ resource "digitalocean_droplet" "vm-primary" {
   ]
 
   provisioner "file" {
-    source = "..\..\docker-compose.yml"
+    source = "../../../docker-compose.yml"
     destination = "/tmp/docker-compose.yml"
   }
 
