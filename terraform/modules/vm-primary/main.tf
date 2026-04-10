@@ -43,9 +43,6 @@ resource "digitalocean_droplet" "vm-primary" {
       "cd /tmp/",
       "docker compose up"  
 
-
-
-
       "echo DONE!"
     ]
 
