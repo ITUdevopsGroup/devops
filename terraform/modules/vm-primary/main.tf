@@ -7,6 +7,11 @@ resource "digitalocean_droplet" "vm-primary" {
     data.digitalocean_ssh_key.set_ssh_key.id
   ]
 
+  provisioner "file" {
+    source = "..\..\docker-compose.yml"
+    destination = "/tmp/docker-compose.yml"
+  }
+
   provisioner "remote-exec" {
     inline = [
       "export PATH=$PATH:/usr/bin",
@@ -32,6 +37,14 @@ resource "digitalocean_droplet" "vm-primary" {
       "sudo usermod -aG docker $USER",
       "newgrp docker",
       "docker run hello-world",
+
+      "echo Deploying database, minitwit and associated applications"
+      "docker login -u andersfrimann -p itudevops",
+      "cd /tmp/",
+      "docker compose up"  
+
+
+
 
       "echo DONE!"
     ]

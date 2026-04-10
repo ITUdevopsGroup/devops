@@ -37,7 +37,7 @@ variable "do_token" { sensitive = true }
 variable "pvt_key" { sensitive = true }
 variable "pub_key" {}
 variable "do_ssh_key_name" {}
-variable "ubuntu_image" { default = "ubuntu-24-10-x64" }
+variable "ubuntu_image" { default = "ubuntu-24-04-x64" }
 variable "droplet_name" { default = "vm-primary" }
 variable "deployment_region" { default = "fra1" }
 variable "droplet_size" { default = "s-4vcpu-8gb" }
