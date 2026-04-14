@@ -1,0 +1,115 @@
+services:
+  backend:
+    backend:
+    image: andersfrimann/devops_backend:latest
+    ports:
+      - "5001:5001"
+    environment:
+      MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
+      MINITWIT_DB_USER: minitwit_user
+      MINITWIT_DB_PASSWORD: minitwit_password
+    deploy:
+      replicas: 2
+      update_config:
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: minitwit
+      POSTGRES_USER: minitwit_user
+      POSTGRES_PASSWORD: minitwit_password
+    ports:
+      - 5432:5432
+    volumes:
+      - db_data_local:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - "node.role==manager"
+  frontend:
+    image: andersfrimann/devops_frontend:latest
+    ports:
+      - "3000:3000"
+    deploy:
+      replicas: 2
+      update_config:
+        delay: 10s
+        order: start-first
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    deploy:
+      mode: global
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    ports:
+      - "9090:9090"
+    deploy:
+      replicas: 1
+  loki:
+    image: grafana/loki:3.6.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/config.yaml:ro
+    deploy:
+      replicas: 1
+
+  alloy:
+    image: grafana/alloy:latest
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+    deploy:
+      replicas: 1
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    ports:
+      - "3001:3000"
+    deploy:
+      replicas: 1
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  db_data:
