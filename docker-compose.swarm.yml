@@ -1,6 +1,5 @@
 services:
   backend:
-    backend:
     image: andersfrimann/devops_backend:latest
     ports:
       - "5001:5001"
