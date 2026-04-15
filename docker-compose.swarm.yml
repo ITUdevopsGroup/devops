@@ -111,4 +111,4 @@ volumes:
   prometheus_data:
   grafana_data:
   loki_data:
-  db_data:
+  db_data_local:
