@@ -38,6 +38,11 @@ resource "digitalocean_droplet" "vm-primary" {
       "newgrp docker",
       "docker run hello-world",
 
+      "echo Installing postgres"
+      "sudo apt install postgresql postgresql-contrib"
+      "psql --version"
+      "sudo systemctl status postgresql"
+      
       "echo Deploying database, minitwit and associated applications"
       "docker login -u andersfrimann -p itudevops",
       "cd /tmp/",
