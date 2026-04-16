@@ -8,6 +8,7 @@ export DIGITALOCEAN_SSH_KEY="<pick the name of your digital ocean ssh key"
 export DO_PAT="<Create access token and paste value into here>"
 export TF_LOG="INFO"
 
+# Install Terraform from https://developer.hashicorp.com/terraform/install
 # Run following commands to install infra
 # terraform init
 # terraform plan   -var "do_token=${DO_PAT}"   -var "pvt_key=${PVT_KEY}"   -var "pub_key=${PUB_KEY}"   -var "do_ssh_key_name=${DIGITALOCEAN_SSH_KEY}"   -var "droplet_size=${DROPLET_SIZE}"
