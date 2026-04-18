@@ -28,3 +28,8 @@ services:
 
 volumes:
   db_data_prod:
+
+networks:
+  default:
+    name: minitwit-public 
+    external: true

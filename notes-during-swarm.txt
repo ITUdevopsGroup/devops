@@ -1,0 +1,5 @@
+Used this command to create stack:
+docker stack deploy --compose-file docker-compose.swarm.prod.yml minitwitdemo
+
+Setup reverse proxy with Træfik:
+https://doc.traefik.io/traefik/setup/swarm/
