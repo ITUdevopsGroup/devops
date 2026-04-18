@@ -16,5 +16,5 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro   # Swarm API socket
 
 networks:
-  name: minitwit-public 
-  driver: overlay
+  minitwit-public: 
+    driver: overlay
