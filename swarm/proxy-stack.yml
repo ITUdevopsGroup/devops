@@ -21,6 +21,8 @@ services:
         - node.hostname == MiniTwit-Database
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro   # Swarm API socket
+    networks:
+      - minitwit-public
 
 networks:
   minitwit-public: 
