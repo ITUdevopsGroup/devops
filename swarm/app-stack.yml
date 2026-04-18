@@ -11,7 +11,7 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.backend.rule=PathPrefix('/')"
-        - "traefik.http.routers.backend.entrypoint=api"
+        - "traefik.http.routers.backend.entrypoints=api"
         - "traefik.http.services.backend.loadbalancer.server.port=5001"
 
 
