@@ -25,3 +25,4 @@ services:
 networks:
   minitwit-public: 
     driver: overlay
+    name: minitwit-public
