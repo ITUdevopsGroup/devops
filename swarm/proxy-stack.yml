@@ -2,8 +2,8 @@ services:
   traefik:
     image: traefik:v3.6
     command:
-      - "--api.dashboard=true" # Enable the dashboard
       - "--api.insecure=true" # Explicitly disable insecure API mod
+      - "--api.dashboard=true" # Enable the dashboard
       - "--entrypoints.api.address=:6001"
       # Enable the Docker Swarm provider (instead of Docker provider)
       - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
