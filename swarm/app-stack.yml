@@ -1,0 +1,42 @@
+services:
+  backend:
+    depends_on:
+      - db     
+    image: andersfrimann/devops_backend:main
+    environment:
+      MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
+      MINITWIT_DB_USER: minitwit_user
+      MINITWIT_DB_PASSWORD: minitwit_password
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.backend.rule=PathPrefix(`/`)"
+        - "traefik.http.routers.backend.entrypoints=api"
+        - "traefik.http.services.backend.loadbalancer.server.port=5001"
+
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: minitwit
+      POSTGRES_USER: minitwit_user
+      POSTGRES_PASSWORD: minitwit_password
+    volumes:
+      - db_data_prod:/var/lib/postgresql/data
+      
+  frontend:
+    image: andersfrimann/devops_frontend:main
+    environment:
+      NEXT_PUBLIC_API_HOST: "http://167.172.111.97"
+      NEXT_PUBLIC_API_PORT: "5001"
+    depends_on:
+      - backend
+
+volumes:
+  db_data_prod:
+
+networks:
+  default:
+    name: minitwit-public 
+    external: true

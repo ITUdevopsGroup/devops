@@ -1,0 +1,30 @@
+services:
+  traefik:
+    image: traefik:v3.6
+    command:
+      - "--api.insecure=true" # Explicitly disable insecure API mod
+      - "--api.dashboard=true" # Enable the dashboard
+      - "--entrypoints.api.address=:6001"
+      # Enable the Docker Swarm provider (instead of Docker provider)
+      - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
+      # Watch for Swarm service changes (requires socket access)
+      - "--providers.swarm.watch=true"
+      # Recommended: Don't expose services by default; require explicit labels
+      - "--providers.swarm.exposedbydefault=false"
+    
+    ports:
+      - "6001:6001"
+      - "8080:8080"
+    deploy:
+      placement:
+        constraints:
+        - node.hostname == MiniTwit-Database
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro   # Swarm API socket
+    networks:
+      - minitwit-public
+
+networks:
+  minitwit-public: 
+    driver: overlay
+    name: minitwit-public
