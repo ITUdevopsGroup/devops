@@ -1,11 +1,11 @@
 #!/bin/bash
 set -x
 echo "Initializing environment for Terraform"
-export DROPLET_SIZE="s-1vcpu-512mb-50gb" # You can select a droplet size from https://slugs.do-api.dev/
+export DROPLET_SIZE="s-1vcpu-2gb" # You can select a droplet size from https://slugs.do-api.dev/
 export PVT_KEY="$HOME/.ssh/xxx" #path to local private key used for digital ocean
 export PUB_KEY="$HOME/.ssh/xxx.pub" #path to local public key which has been uploaded to digital ocean 
-export DIGITALOCEAN_SSH_KEY="<pick the name of your digital ocean ssh key"
-export DO_PAT="<Create access token and paste value into here>"
+export DIGITALOCEAN_SSH_KEY="terraform"
+export DO_PAT="xxx"
 export TF_LOG="INFO"
 
 # Install Terraform from https://developer.hashicorp.com/terraform/install
