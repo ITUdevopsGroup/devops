@@ -1,7 +1,8 @@
 services:
   backend:
-    build:
-      context: ./devops_backend
+    depends_on:
+      - db     
+    image: andersfrimann/devops_backend:main
     ports:
       - "5001:5001"
     environment:
@@ -19,14 +20,12 @@ services:
     ports:
       - 5432:5432
   frontend:
-    build:
-      context: ./devops_frontend
+    image: andersfrimann/devops_frontend:main
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_HOST: "http://localhost"
+      NEXT_PUBLIC_API_HOST: "http://167.172.111.97"
       NEXT_PUBLIC_API_PORT: "5001"
     depends_on:
       - backend
-
  
