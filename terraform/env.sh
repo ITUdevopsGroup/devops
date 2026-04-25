@@ -13,4 +13,5 @@ export TF_LOG="INFO"
 terraform init
 terraform plan   -var "do_token=${DO_PAT}"   -var "pvt_key=${PVT_KEY}"   -var "pub_key=${PUB_KEY}"   -var "do_ssh_key_name=${DIGITALOCEAN_SSH_KEY}"   -var "droplet_size=${DROPLET_SIZE}"
 terraform apply   -var "do_token=${DO_PAT}"   -var "pvt_key=${PVT_KEY}"   -var "pub_key=${PUB_KEY}"   -var "do_ssh_key_name=${DIGITALOCEAN_SSH_KEY}"   -var "droplet_size=${DROPLET_SIZE}"
-# terraform destroy
+#Comment out previous 3 lines and comment in next line to destroy resources.
+#terraform destroy   -var "do_token=${DO_PAT}"   -var "pvt_key=${PVT_KEY}"   -var "pub_key=${PUB_KEY}"   -var "do_ssh_key_name=${DIGITALOCEAN_SSH_KEY}"   -var "droplet_size=${DROPLET_SIZE}"
