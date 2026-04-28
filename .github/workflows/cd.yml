@@ -52,3 +52,16 @@ jobs:
             cd /root/devops
             git pull
             docker compose -f docker-compose.prod.yml up -d --pull always --force-recreate
+
+      - name: Update swarm
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 167.172.111.97
+          username: root
+          key: ${{ secrets.SSH_KEY_FOR_DEPLOYMENT }}
+          port: 22
+          script: |
+            cd /root/devops
+            git pull
+            docker stack deploy --compose-file swarm/proxy-stack.yml proxy
+            docker stack deploy --compose-file swarm/app-stack.yml app
