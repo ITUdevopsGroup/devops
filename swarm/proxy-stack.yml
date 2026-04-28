@@ -5,13 +5,34 @@ services:
       - "--api.insecure=true" # Explicitly disable insecure API mod
       - "--api.dashboard=true" # Enable the dashboard
       - "--entrypoints.api.address=:6001"
+      
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # HTTP → HTTPS redirect
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      
+      # Let's Encrypt TLS
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=you@example.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      
+      # Docker swarm
       # Enable the Docker Swarm provider (instead of Docker provider)
       - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
       # Watch for Swarm service changes (requires socket access)
       - "--providers.swarm.watch=true"
       # Recommended: Don't expose services by default; require explicit labels
       - "--providers.swarm.exposedbydefault=false"
-    
+      - "--providers.swarm.network=traefik-public"
+
+      # Let's Encrypt TLS
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=you@example.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
       - "6001:6001"
       - "8080:8080"
@@ -23,6 +44,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro   # Swarm API socket
     networks:
       - minitwit-public
+
+    labels:
+        # Expose the dashboard (optional, protect in production)
+        - "traefik.enable=true"
+        - "traefik.http.routers.dashboard.rule=Host(`traefik.rollbackandrelax.dk`)"
+        - "traefik.http.routers.dashboard.entrypoints=websecure"
+        - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.dashboard.service=api@internal"
+        # Dummy service port (required for Swarm)
+        - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
 
 networks:
   minitwit-public: 
