@@ -2,6 +2,8 @@ version: "3.8"
 
 services:
   backend:
+    depends_on:
+    - db
     image: andersfrimann/devops_backend:main
     networks:
       - minitwit-public
@@ -10,8 +12,6 @@ services:
       MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
       MINITWIT_DB_USER: minitwit_user
       MINITWIT_DB_PASSWORD: minitwit_password
-      # Docker will restart the container anytime this value changes
-      FORCE_RESTART: "${FORCE_RELOAD_VAR}:dev"
     deploy:
       labels:
         - traefik.enable=true
@@ -33,8 +33,6 @@ services:
     networks:
       - minitwit-public
     environment:
-      # Docker will restart the container anytime this value changes
-      FORCE_RESTART: "${FORCE_RELOAD_VAR}:dev"
       NEXT_PUBLIC_API_HOST: https://rollbackandrelax.dk/api
       NEXT_PUBLIC_API_PORT: "443"
     deploy:
