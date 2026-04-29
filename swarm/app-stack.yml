@@ -1,42 +1,71 @@
+version: "3.8"
+
 services:
   backend:
     depends_on:
-      - db     
+      - db
     image: andersfrimann/devops_backend:main
+    networks:
+      - minitwit-public
+      - backend-db
     environment:
       MINITWIT_DB_URL: jdbc:postgresql://db:5432/minitwit
       MINITWIT_DB_USER: minitwit_user
       MINITWIT_DB_PASSWORD: minitwit_password
     deploy:
       labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.backend.rule=PathPrefix(`/`)"
-        - "traefik.http.routers.backend.entrypoints=api"
-        - "traefik.http.services.backend.loadbalancer.server.port=5001"
+        - traefik.enable=true
 
+        # Router 1: HTTPS — https://rollbackandrelax.dk/api/*
+        - traefik.http.routers.backend.rule=Host(`api.rollbackandrelax.dk`)
+        - traefik.http.routers.backend.entrypoints=websecure
+        - traefik.http.routers.backend.tls.certresolver=letsencrypt
+
+        # Router 2: Plain HTTP — http://ip:6001/* (legacy / simulator access)
+        - traefik.http.routers.backend-api.rule=PathPrefix(`/`)
+        - traefik.http.routers.backend-api.entrypoints=api
+
+        # Both routers share the same service
+        - traefik.http.services.backend.loadbalancer.server.port=5001
+
+  frontend:
+    image: andersfrimann/devops_frontend:main
+    networks:
+      - minitwit-public
+    environment:
+      NEXT_PUBLIC_API_HOST: https://rollbackandrelax.dk/api
+      NEXT_PUBLIC_API_PORT: "443"
+    deploy:
+      labels:
+        - traefik.enable=true
+        # Catch-all for non-API traffic → frontend
+        - traefik.http.routers.frontend.rule=Host(`rollbackandrelax.dk`)
+        - traefik.http.routers.frontend.entrypoints=websecure
+        - traefik.http.routers.frontend.tls.certresolver=letsencrypt
+        - traefik.http.services.frontend.loadbalancer.server.port=3000
 
   db:
     image: postgres:16
     restart: unless-stopped
+    networks:
+      - backend-db
     environment:
       POSTGRES_DB: minitwit
       POSTGRES_USER: minitwit_user
       POSTGRES_PASSWORD: minitwit_password
     volumes:
       - db_data_prod:/var/lib/postgresql/data
-      
-  frontend:
-    image: andersfrimann/devops_frontend:main
-    environment:
-      NEXT_PUBLIC_API_HOST: "http://167.172.111.97"
-      NEXT_PUBLIC_API_PORT: "5001"
-    depends_on:
-      - backend
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == MiniTwit-Database
 
 volumes:
   db_data_prod:
 
 networks:
-  default:
-    name: minitwit-public 
+  minitwit-public:
     external: true
+  # Private network — only backend and db, not exposed to Traefik
+  backend-db:
+    driver: overlay
