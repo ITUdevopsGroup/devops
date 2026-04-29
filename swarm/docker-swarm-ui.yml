@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  swarm-visualizer:
+    image: dockersamples/visualizer:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - minitwit-public
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.visualizer.rule=Host(`swarm.rollbackandrelax.dk`)
+        - traefik.http.routers.visualizer.entrypoints=websecure
+        - traefik.http.routers.visualizer.tls.certresolver=letsencrypt
+        - traefik.http.routers.visualizer.middlewares=visualizer-auth
+        - traefik.http.middlewares.visualizer-auth.basicauth.users=admin:$$2y$$05$$Kx/s99WrJAhVe.RRtP1xbeNBv2DT1XnNVkRTOSqbk9Wy717/3VEg6
+        - traefik.http.services.visualizer.loadbalancer.server.port=8080
+
+networks:
+  minitwit-public:
+    external: true
