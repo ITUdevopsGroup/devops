@@ -46,6 +46,7 @@ services:
 
   db:
     image: postgres:16
+    restart: unless-stopped
     networks:
       - backend-db
     environment:
