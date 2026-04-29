@@ -3,7 +3,7 @@ version: "3.8"
 services:
   backend:
     depends_on:
-    - db
+      - db
     image: andersfrimann/devops_backend:main
     networks:
       - minitwit-public
