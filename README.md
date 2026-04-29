@@ -41,8 +41,8 @@ The target setup is in a picture below. The Orange arrows are requests
 
 
 ### TODO for swarm
-- [ ] Github actions
-- [ ] HTTPS
+- [x] Github actions
+- [x] HTTPS
 - [ ] add droplet with terraform
 - [ ] Observability stack
 - [ ] Backup DB and restore in swarm
