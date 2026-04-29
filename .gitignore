@@ -3,3 +3,5 @@ alpNotes.md
 .DS_Store
 venv
 __pycache__
+
+.env
