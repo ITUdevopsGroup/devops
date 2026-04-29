@@ -13,6 +13,9 @@ services:
       MINITWIT_DB_USER: minitwit_user
       MINITWIT_DB_PASSWORD: minitwit_password
     deploy:
+      replicas: 3
+      placement:
+        max_replicas_per_node: 2
       labels:
         - traefik.enable=true
 
