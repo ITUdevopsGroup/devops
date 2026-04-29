@@ -1,61 +1,91 @@
+version: "3.8"
+
 services:
   traefik:
     image: traefik:v3.6
-    command:
-      - "--api.insecure=true" # Explicitly disable insecure API mod
-      - "--api.dashboard=true" # Enable the dashboard
-      - "--entrypoints.api.address=:6001"
-      
-      # Entrypoints
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      # HTTP → HTTPS redirect
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      
-      # Let's Encrypt TLS
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=you@example.com"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-      
-      # Docker swarm
-      # Enable the Docker Swarm provider (instead of Docker provider)
-      - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
-      # Watch for Swarm service changes (requires socket access)
-      - "--providers.swarm.watch=true"
-      # Recommended: Don't expose services by default; require explicit labels
-      - "--providers.swarm.exposedbydefault=false"
-      - "--providers.swarm.network=traefik-public"
-
-      # Let's Encrypt TLS
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=you@example.com"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    environment:
+      # Docker will restart the container anytime this value changes
+      - FORCE_RESTART=${FORCE_RELOAD_VAR}
     ports:
-      - "6001:6001"
-      - "8080:8080"
-    deploy:
-      placement:
-        constraints:
-        - node.hostname == MiniTwit-Database
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro   # Swarm API socket
+      # Host-mode so Traefik sees real client IPs
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+      - target: 6001
+        published: 6001
+        protocol: tcp
+        mode: host
     networks:
       - minitwit-public
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    command:
+      # --- Dashboard ---
+      - --api.dashboard=true
+      - --api.insecure=false
+      - --log.level=INFO
+      - --accesslog=true
 
-    labels:
-        # Expose the dashboard (optional, protect in production)
-        - "traefik.enable=true"
-        - "traefik.http.routers.dashboard.rule=Host(`traefik.rollbackandrelax.dk`)"
-        - "traefik.http.routers.dashboard.entrypoints=websecure"
-        - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
-        - "traefik.http.routers.dashboard.service=api@internal"
-        # Dummy service port (required for Swarm)
-        - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+      # --- Entrypoints ---
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.api.address=:6001
+
+      # --- HTTP → HTTPS redirect ---
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+
+      # --- Let's Encrypt (HTTP challenge) ---
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+
+      # --- Docker Swarm provider ---
+      - --providers.swarm.endpoint=unix:///var/run/docker.sock
+      - --providers.swarm.watch=true
+      - --providers.swarm.exposedbydefault=false
+      - --providers.swarm.network=minitwit-public
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == MiniTwit-Database
+      labels:
+        # --- Dashboard Router ---
+        - traefik.enable=true
+        - traefik.http.routers.dashboard.rule=Host(`traefik.rollbackandrelax.dk`)
+        - traefik.http.routers.dashboard.entrypoints=websecure
+        - traefik.http.routers.dashboard.tls.certresolver=letsencrypt
+        - traefik.http.routers.dashboard.service=api@internal
+        - traefik.http.routers.dashboard.middlewares=dashboard-auth
+        # Generate: echo $(htpasswd -nB admin) | sed -e 's/\$/\$\$/g'
+        - traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$2y$$05$$Kx/s99WrJAhVe.RRtP1xbeNBv2DT1XnNVkRTOSqbk9Wy717/3VEg6
+        # Dummy port (required for Swarm)
+        - traefik.http.services.dashboard.loadbalancer.server.port=8080
+
+        # --- Reusable middlewares ---
+        - traefik.http.middlewares.secure-headers.headers.framedeny=true
+        - traefik.http.middlewares.secure-headers.headers.browserxssfilter=true
+        - traefik.http.middlewares.secure-headers.headers.contenttypenosniff=true
+        - traefik.http.middlewares.secure-headers.headers.stsseconds=31536000
+        - traefik.http.middlewares.secure-headers.headers.stsincludesubdomains=true
+        - traefik.http.middlewares.secure-headers.headers.forcestsheader=true
 
 networks:
-  minitwit-public: 
+  minitwit-public:
     driver: overlay
     name: minitwit-public
+    attachable: true
+
+volumes:
+  letsencrypt:
