@@ -16,6 +16,15 @@ env:
   IMAGE_NAME: devops_frontend
 
 jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep security scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/security-audit
+
   test-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -86,9 +95,25 @@ jobs:
         working-directory: ./devops_frontend
         run: npm run lint
 
+  image-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build frontend image for scanning
+        run: docker build -t local/devops_frontend:scan ./devops_frontend
+      - name: Scan image with Trivy (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: local/devops_frontend:scan
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+
   build:
     runs-on: ubuntu-latest
-    needs: [test-frontend, eslint]
+    needs: [semgrep, test-frontend, eslint, image-scan]
     permissions:
       contents: read
       packages: write

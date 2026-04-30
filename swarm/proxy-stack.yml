@@ -16,10 +16,6 @@ services:
         published: 443
         protocol: tcp
         mode: host
-      - target: 6001
-        published: 6001
-        protocol: tcp
-        mode: host
     networks:
       - minitwit-public
     volumes:
@@ -35,7 +31,6 @@ services:
       # --- Entrypoints ---
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      - --entrypoints.api.address=:6001
 
       # --- HTTP → HTTPS redirect ---
       - --entrypoints.web.http.redirections.entrypoint.to=websecure

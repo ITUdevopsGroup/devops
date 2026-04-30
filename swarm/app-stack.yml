@@ -24,11 +24,7 @@ services:
         - traefik.http.routers.backend.entrypoints=websecure
         - traefik.http.routers.backend.tls.certresolver=letsencrypt
 
-        # Router 2: Plain HTTP — http://ip:6001/* (legacy / simulator access)
-        - traefik.http.routers.backend-api.rule=PathPrefix(`/`)
-        - traefik.http.routers.backend-api.entrypoints=api
-
-        # Both routers share the same service
+        # Router for backend API
         - traefik.http.services.backend.loadbalancer.server.port=5001
 
   frontend:

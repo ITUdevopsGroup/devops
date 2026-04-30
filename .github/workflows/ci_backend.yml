@@ -16,6 +16,15 @@ env:
   IMAGE_NAME: devops_backend
 
 jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep security scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/security-audit
+
   #testing with our test.py and minitwit_sim_api_test.py files which is currently located at the root of out repo
   test-backend:
     runs-on: ubuntu-latest
@@ -100,8 +109,24 @@ jobs:
         with:
           dockerfile: ./devops_backend/Dockerfile
 
+  image-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image for scanning
+        run: docker build -t local/devops_backend:scan ./devops_backend
+      - name: Scan image with Trivy (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: local/devops_backend:scan
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+
   build:
-    needs: [test-backend, test-api, checkstyle, hadolint]
+    needs: [semgrep, test-backend, test-api, checkstyle, hadolint, image-scan]
     runs-on: ubuntu-latest
 
     permissions:

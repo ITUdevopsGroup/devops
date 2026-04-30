@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -24,4 +24,5 @@ EXPOSE 3000
 #npm run dev starts the Next.js development server
 #-H 0.0.0.0 tells Docker to listen on all network interfaces (by default Next.js  it only listens to localhost)
 #-p 3000 tells Next to use port 3000
+USER node
 CMD ["npm","run","start","--","-H","0.0.0.0","-p","3000"]
