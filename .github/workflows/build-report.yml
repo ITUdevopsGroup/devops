@@ -1,0 +1,41 @@
+name: Build Report PDF
+
+on:
+  push:
+    paths:
+      - 'report/**'
+      - '.github/workflows/build-report.yml'
+  pull_request:
+    paths:
+      - 'report/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pandoc and LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pandoc \
+            texlive-xetex \
+            texlive-fonts-recommended \
+            texlive-latex-recommended
+
+      - name: Build PDF
+        working-directory: report
+        run: |
+          mkdir -p build
+          pandoc report.md \
+            -o build/MSc_group_o.pdf \
+            --pdf-engine=xelatex \
+            --resource-path=.:images
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MSc_group_o
+          path: report/build/MSc_group_o.pdf
