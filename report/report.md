@@ -2,7 +2,7 @@
 title: "ITU-MiniTwit — DevOps Report"
 subtitle: "MSc course in DevOps, Software Evolution and Software Maintenance"
 author:
-  - "Group X"
+  - "Group o"
 date: "Spring 2026"
 geometry: margin=2.5cm
 fontsize: 11pt
