@@ -1,0 +1,98 @@
+version: "3.8"
+
+services:
+  node-exporter:
+    image: prom/node-exporter:latest
+    networks:
+      - monitoring
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    deploy:
+      mode: global  # one per node
+
+  prometheus:
+    image: prom/prometheus:latest
+    networks:
+      - monitoring
+      - minitwit-public  # to scrape backend metrics
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == MiniTwit-Database
+
+  loki:
+    image: grafana/loki:3.6.0
+    networks:
+      - monitoring
+    command: -config.file=/etc/loki/config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/config.yaml:ro
+      - loki_data:/loki
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == MiniTwit-Database
+
+  alloy:
+    image: grafana/alloy:latest
+    networks:
+      - monitoring
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+    deploy:
+      mode: global  # collect logs from every node
+      
+  grafana:
+    image: grafana/grafana:latest
+    networks:
+      - monitoring
+      - minitwit-public  # for Traefik
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=devops123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    deploy:
+      replicas: 1
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.grafana.rule=Host(`grafana.rollbackandrelax.dk`)
+        - traefik.http.routers.grafana.entrypoints=websecure
+        - traefik.http.routers.grafana.tls.certresolver=letsencrypt
+        - traefik.http.services.grafana.loadbalancer.server.port=3000
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+
+networks:
+  minitwit-public:
+    external: true
+  monitoring:
+    driver: overlay
