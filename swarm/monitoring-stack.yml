@@ -23,7 +23,7 @@ services:
       - monitoring
       - minitwit-public  # to scrape backend metrics
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -41,7 +41,7 @@ services:
       - monitoring
     command: -config.file=/etc/loki/config.yaml
     volumes:
-      - ./loki-config.yaml:/etc/loki/config.yaml:ro
+      - ./../loki-config.yaml:/etc/loki/config.yaml:ro
       - loki_data:/loki
     deploy:
       replicas: 1
@@ -54,7 +54,7 @@ services:
     networks:
       - monitoring
     volumes:
-      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./../alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock
     command:
       - run
@@ -70,7 +70,7 @@ services:
       - minitwit-public  # for Traefik
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./../monitoring/grafana/provisioning:/etc/grafana/provisioning
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=devops123
