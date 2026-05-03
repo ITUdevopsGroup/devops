@@ -62,6 +62,9 @@ services:
       placement:
         constraints:
           - node.hostname == MiniTwit-Database
+    ports:
+    - "5432:5432"
+
 
 volumes:
   db_data_prod:
