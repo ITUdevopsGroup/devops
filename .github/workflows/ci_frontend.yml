@@ -144,8 +144,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           no-cache: true
           build-args: |
-            NEXT_PUBLIC_API_HOST=http://167.172.111.97
-            NEXT_PUBLIC_API_PORT=5001
+            NEXT_PUBLIC_API_HOST=https://api.rollbackandrelax.dk/
+            NEXT_PUBLIC_API_PORT=443
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
