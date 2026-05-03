@@ -1,3 +1,0 @@
--- Schema is now managed by the ORM (JPA/Hibernate) against PostgreSQL.
--- This file is intentionally left without executable DDL to avoid
--- raw SQL-based schema management.
