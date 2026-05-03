@@ -40,18 +40,6 @@ jobs:
             sleep 15
             ELAPSED=$((ELAPSED + 15))
           done
-      
-      - name: Update prod
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: 167.172.111.97
-          username: root
-          key: ${{ secrets.SSH_KEY_FOR_DEPLOYMENT }}
-          port: 22
-          script: |
-            cd /root/devops
-            git pull
-            docker compose -f docker-compose.prod.yml up -d --pull always --force-recreate
 
       - name: Update swarm
         uses: appleboy/ssh-action@v1.2.5

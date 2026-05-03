@@ -16,8 +16,8 @@ services:
         published: 443
         protocol: tcp
         mode: host
-      - target: 6001
-        published: 6001
+      - target: 5001
+        published: 5001
         protocol: tcp
         mode: host
     networks:
@@ -35,7 +35,7 @@ services:
       # --- Entrypoints ---
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      - --entrypoints.api.address=:6001
+      - --entrypoints.api.address=:5001
 
       # --- HTTP → HTTPS redirect ---
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
