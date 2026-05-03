@@ -43,8 +43,8 @@ The target setup is in a picture below. The Orange arrows are requests
 ### TODO for swarm
 - [x] Github actions
 - [x] HTTPS
-- [ ] add droplet with terraform
-- [ ] Observability stack
+- [x] add droplet with terraform
+- [x] Observability stack
 - [ ] Backup DB and restore in swarm
 - [ ] Remove old compose setup, and replace with swarm (change backend port for swarm to 5001)
 
