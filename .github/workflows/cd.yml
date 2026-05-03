@@ -66,5 +66,7 @@ jobs:
             docker stack deploy --compose-file swarm/proxy-stack.yml proxy --resolve-image always
             docker stack deploy --compose-file swarm/app-stack.yml app --resolve-image always
             docker stack deploy --compose-file swarm/docker-swarm-ui.yml swarm --resolve-image always
+            docker stack deploy --compose-file swarm/monitoring-stacki.yml monitoring --resolve-image always
+
 
             
