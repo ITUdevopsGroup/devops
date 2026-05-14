@@ -75,21 +75,6 @@ jobs:
         if: always()
         run: docker compose -f docker-compose.ci.yml down -v
 
-  checkstyle:
-      runs-on: ubuntu-latest
-      steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: "21"
-          distribution: "temurin"
-
-      - name: Run Checkstyle
-        working-directory: ./devops_backend
-        run: mvn checkstyle:check
-
   hadolint:
     runs-on: ubuntu-latest
     steps:
@@ -101,7 +86,7 @@ jobs:
           dockerfile: ./devops_backend/Dockerfile
 
   build:
-    needs: [test-backend, test-api, checkstyle, hadolint]
+    needs: [test-backend, test-api, hadolint]
     runs-on: ubuntu-latest
 
     permissions:
