@@ -3,6 +3,10 @@ title: "ITU-MiniTwit — DevOps Report"
 subtitle: "MSc course in DevOps, Software Evolution and Software Maintenance"
 author:
   - "Group o"
+  - "Juliane Falsig Hvid - juhv@itu.dk"
+  - "Maria Elmelund Møller - mamoe@itu.dk" 
+  - "Anders Frimann Nielsen - " 
+  - "Alperen Aydin"
 date: "Spring 2026"
 geometry: margin=2.5cm
 fontsize: 11pt
@@ -12,6 +16,8 @@ colorlinks: true
 linkcolor: blue
 urlcolor: blue
 ---
+
+\newpage
 
 # Introduction
 This report documents the development, operation, and maintenance of our ITU-MiniTwit system. A Twitter-inspired platform built for the MSc course in DevOps, Software Evolution and Software Maintenance. Starting from a legacy Python 2 application, we re-engineered it into a modern, containerized stack and operated it under realistic conditions while applying DevOps principles throughout. The following sections present the system's architecture and dependencies, our CI/CD pipeline and operational setup, and our reflections on the challenges encountered along the way.
@@ -45,17 +51,17 @@ At figure XX below is a dependency graph of the technologies and tools the proje
 We use SonarQube and Codacy for static analysis.
 
 ![sonarqube](images/Sonarqube.png)
-*Figure 3: .*
+*Figure 3: SonarQube issues.*
 
 ![codecy](images/codecy.png)
-*Figure 4: .*
+*Figure 4: Codecy issues.*
 
 SonarQube's quality gate fails due to security issues, with ratings of E in security, B in reliability, and A in maintainability (see picture XX). Codacy gives an overall grade of A with 5.1 issues per thousand lines of code, though 56 of 60 total issues are security-related (see picture XX). Security is the main concern across both tools.
 Our test suite consists of API integration tests covering the core endpoints and Playwright end-to-end tests in CI. We do not have unit tests, and test coverage reporting is not integrated into our static analysis tools.
 
 
 ![graf](images/graf.png)
-*Figure 5: .*
+*Figure 5: Simulator responses.*
 
 From our Grafana monitoring data, the API had a median response time of 12.3 ms and a p99 of 79.9 ms during the simulator period, peaking at 504 ms under high traffic. During sustained request flooding, as described in the Security Hardening section, CPU reaches 100% and the application becomes unresponsive. We have not consistently measured downtime, but have experienced it during database migration, the move from AWS to DigitalOcean, and over Easter due to the simulator not being restarted correctly (see picture XX).
 
@@ -68,10 +74,10 @@ The two CI workflows are triggered on pull requests and pushes to main which is 
 The CD workflow triggers on pushes to main, waits for all CI workflows to complete, then SSHes into the manager node and runs ‘docker stack deploy’ for each of our four stacks: the reverse proxy, application, Swarm management UI, and monitoring.
 
 ![pipeline](images/pipeline.png)
-*Figure 6: .*
+*Figure 6: Github Actions overview.*
 
 ![overview](images/overview.png)
-*Figure 7: .*
+*Figure 7: Deployment architecture and CI/CD pipeline.*
 
 We use Terraform to set up the DigitalOcean infrastructure. Our configuration defines two droplets, one for the database and Swarm manager, and one for the worker node, with backups and monitoring enabled, placed within the same VPC for internal communication.
 
@@ -92,10 +98,10 @@ The systems & operations dashboard contains panels for backend health status, re
 The business dashboard tracks total registered users, messages posted, follow relationships, and a top 10 most-followed profiles table. It is designed to answer questions like "How many users do we have?", "How active are they?", and "Which profiles have the most followers?", giving insight into platform growth and identifying influencers.
 
 ![monitor](images/monitor.png)
-*Figure 8: .*
+*Figure 8: Grafana monitoring systems and operations dashboard.*
 
 ![monitor2](images/monitor2.png)
-*Figure 9: .*
+*Figure 9: Grafana monitoring business dashboard.*
 
 ## Logging
 
@@ -105,10 +111,13 @@ A few limitations remain: the logs dashboard only covers the backend, there is n
 Grafana queries Loki with backend filters such as the ones seen in figure XX. Figure XX shows a screenshot of the logs in Grafana.
 
 ![log](images/log.png)
+*Figure 10: Grafana queries.*
 
-![log](images/log.png)
+![log](images/logTabel.png)
+*Figure 11: Tools for logging.*
 
 ![dashboard2](images/dashboard2.png)
+*Figure 12: Grafana Logging dashboard.*
 
 ## Security Hardening
 
@@ -119,6 +128,7 @@ HTTPS is enforced on all public-facing endpoints using Traefik's built-in ACME/L
 Access to our servers is restricted to SSH key authentication, and our CI/CD pipeline uses dedicated deployment keypairs for automated deployments, avoiding the use of passwords entirely.
 
 ![attack](images/attack.png)
+*Figure 13: Screenshot from grafana dashboard showing repeated bursts of requests.*
 
 As seen on the screenshot from Grafana our API has been hit by repeated bursts of around 5,000 requests per second targeting the /fllws/{username} and /msgs/{username} endpoints. These spikes follow a regular pattern over several hours, which points to some form of automated tooling. During these periods, CPU usage hits 100% and the server becomes unresponsive. We have not implemented any rate limiting or IP blocking to deal with this, so for now it remains an unresolved issue.
 
