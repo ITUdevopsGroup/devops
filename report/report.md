@@ -20,8 +20,8 @@ colorlinks: true
 linkcolor: blue
 urlcolor: blue
 header-includes:
-  - \usepackage{titlesec}
-  - \newcommand{\sectionbreak}{\clearpage}
+  - \let\oldtableofcontents\tableofcontents
+  - \renewcommand{\tableofcontents}{\oldtableofcontents\clearpage}
 ---
 
 
