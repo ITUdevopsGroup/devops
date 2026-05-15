@@ -1,20 +1,35 @@
 ---
 title: "ITU-MiniTwit — DevOps Report"
 subtitle: "MSc course in DevOps, Software Evolution and Software Maintenance"
-author:
-  - "Group o"
-  - "Juliane Falsig Hvid - juhv@itu.dk"
-  - "Maria Elmelund Møller - mamoe@itu.dk" 
-  - "Anders Frimann Nielsen - " 
-  - "Alperen Aydin"
+author: "Group o"
 date: "Spring 2026"
 geometry: margin=2.5cm
 fontsize: 11pt
 toc: true
+toc-depth: 3
 numbersections: true
 colorlinks: true
 linkcolor: blue
 urlcolor: blue
+header-includes:
+  - |
+    \usepackage{booktabs}
+    \AtBeginDocument{
+      \begin{table}[h]
+      \centering
+      \begin{tabular}{ll}
+      \toprule
+      \textbf{Name} & \textbf{Email} \\
+      \midrule
+      Juliane Falsig Hvid & juhv@itu.dk \\
+      Maria Elmelund Møller & mamoe@itu.dk \\
+      Anders Frimann Nielsen & andeni@itu.dk \\
+      Alperen Aydin & aayd@itu.dk \\
+      \bottomrule
+      \end{tabular}
+      \end{table}
+      \newpage
+    }
 ---
 
 \newpage
@@ -63,7 +78,7 @@ Our test suite consists of API integration tests covering the core endpoints and
 ![graf](images/graf.png)
 *Figure 5: Simulator responses.*
 
-From our Grafana monitoring data, the API had a median response time of 12.3 ms and a p99 of 79.9 ms during the simulator period, peaking at 504 ms under high traffic. During sustained request flooding, as described in the Security Hardening section, CPU reaches 100% and the application becomes unresponsive. We have not consistently measured downtime, but have experienced it during database migration, the move from AWS to DigitalOcean, and over Easter due to the simulator not being restarted correctly (see figure 5).
+From our Grafana monitoring data, the API had a median response time of 12.3 ms and a p99 of 79.9 ms during the simulator period, peaking at 504 ms under high traffic. During sustained request flooding, as described in section 3.4, CPU reaches 100% and the application becomes unresponsive. We have not consistently measured downtime, but have experienced it during database migration, the move from AWS to DigitalOcean, and over Easter due to the simulator not being restarted correctly (see figure 5).
 
 # Process Perspective
 
@@ -91,7 +106,7 @@ We use Prometheus as our metrics collection engine. It uses a pull-based approac
 
 ### Systems & operations
 
-The systems & operations dashboard contains panels for backend health status, request rates split by simulator and user traffic, error rates, response times, and resource usage. This dashboard is designed to answer questions like "Is something broken?", "Are we running out of resources?", and "How fast is the page responding?". After running out of disk space on the server (see section X), we added a dedicated disk usage panel with a threshold alert at 70% to prevent that from happening again. The request rate panel reveals which endpoints are called the most and could be candidates for optimization, while the response time panel helps identify slow endpoints where refactoring could have the most impact.
+The systems & operations dashboard contains panels for backend health status, request rates split by simulator and user traffic, error rates, response times, and resource usage. This dashboard is designed to answer questions like "Is something broken?", "Are we running out of resources?", and "How fast is the page responding?". After running out of disk space on the server (see section 3.4), we added a dedicated disk usage panel with a threshold alert at 70% to prevent that from happening again. The request rate panel reveals which endpoints are called the most and could be candidates for optimization, while the response time panel helps identify slow endpoints where refactoring could have the most impact.
 
 ### Business
 
