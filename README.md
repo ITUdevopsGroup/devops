@@ -1,240 +1,273 @@
 # ITU MiniTwit DevOps Project
 
-[![Backend CI](https://github.com/ITUdevopsGroup/devops/actions/workflows/ci_backend.yml/badge.svg)](https://github.com/ITUdevopsGroup/devops/actions/workflows/ci_backend.yml)
-[![Frontend CI](https://github.com/ITUdevopsGroup/devops/actions/workflows/ci_frontend.yml/badge.svg)](https://github.com/ITUdevopsGroup/devops/actions/workflows/ci_frontend.yml)
-[![Deploy](https://github.com/ITUdevopsGroup/devops/actions/workflows/cd.yml/badge.svg)](https://github.com/ITUdevopsGroup/devops/actions/workflows/cd.yml)
+MiniTwit implementation for the ITU DevOps course. The repository contains a
+Spring Boot backend, a Next.js frontend, PostgreSQL persistence, Docker Compose
+setups, Docker Swarm stack files, Terraform infrastructure files, GitHub Actions
+workflows, and monitoring/logging configuration.
 
-This repository contains Group O's ITU MiniTwit system for the DevOps course.
-It is a small Twitter-like application with a Spring Boot backend, a Next.js
-frontend, PostgreSQL persistence, Docker-based local development, Docker Swarm
-production deployment, and a Prometheus/Grafana/Loki monitoring stack.
-
-The production system is built around Docker images published to Docker Hub and
-deployed to a DigitalOcean-hosted Docker Swarm.
-
-## Live System
-
-- Frontend: <https://rollbackandrelax.dk>
-- API: <https://api.rollbackandrelax.dk>
-- Grafana: <https://grafana.rollbackandrelax.dk>
-- Traefik dashboard: <https://traefik.rollbackandrelax.dk>
-- Swarm visualizer: <https://swarm.rollbackandrelax.dk>
-
-Some operational dashboards require credentials.
-
-## Contents
-
-- [Live System](#live-system)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Repository Layout](#repository-layout)
-- [System Overview](#system-overview)
-- [Prerequisites](#prerequisites)
-- [Configuration](#configuration)
-- [Installation and Local Development](#installation-and-local-development)
-- [Usage](#usage)
-- [Tests and Quality Checks](#tests-and-quality-checks)
-- [CI/CD](#cicd)
-- [Production Deployment](#production-deployment)
-- [Operating Production](#operating-production)
-- [Contributing Changes to Production](#contributing-changes-to-production)
-- [Support](#support)
-- [Security and Secrets](#security-and-secrets)
-- [Project Status](#project-status)
-- [License](#license)
+This README only describes information visible in files in this project
+checkout.
 
 ## Features
 
-- Public and user timelines.
-- User registration and login.
-- Posting messages.
-- Following and unfollowing users.
-- MiniTwit simulator-compatible API endpoints.
-- PostgreSQL-backed persistence through Spring Data JPA.
-- Prometheus metrics, Grafana dashboards, Loki logs, and Alloy log collection.
-- Docker Compose setup for local development and integration testing.
-- Docker Swarm deployment with Traefik, HTTPS, and stack-based service updates.
+- Public timeline and user timeline UI.
+- User registration and login UI.
+- Posting messages from the timeline UI.
+- Follow and unfollow actions in the UI.
+- Simulator-style backend endpoints for `/register`, `/msgs`, `/fllws`, and
+  `/latest`.
+- Prometheus metrics endpoint exposed by Spring Boot Actuator.
+- Grafana dashboards for system, business, and backend-log views.
 
 ## Tech Stack
 
-| Area | Technology |
-| --- | --- |
-| Backend | Java 21, Spring Boot 4, Spring Web, Spring Data JPA, Micrometer, Maven |
-| Frontend | Next.js 16, React 19, Tailwind CSS, npm |
-| Database | PostgreSQL 16 |
-| Local runtime | Docker Compose |
-| Production runtime | Docker Swarm, Traefik v3 |
-| Monitoring | Prometheus, Grafana, node-exporter |
-| Logging | Loki, Grafana Alloy |
-| Infrastructure | DigitalOcean, Terraform |
-| CI/CD | GitHub Actions, Docker Hub, Cosign |
-| Tests | JUnit/Maven, pytest, requests, Playwright |
+| Area           | Files show                                                     |
+| -------------- | -------------------------------------------------------------- |
+| Backend        | Java 21, Spring Boot 4.0.2, Spring Web, Spring Data JPA, Maven |
+| Frontend       | Next.js 16.1.6, React 19.2.3, Tailwind CSS, npm                |
+| Database       | PostgreSQL 16 in Docker Compose and Swarm files                |
+| Monitoring     | Prometheus, Grafana, node-exporter, Micrometer                 |
+| Logging        | Grafana Alloy, Loki, Grafana, SLF4J, Log4j                     |
+| Deployment     | Docker, Docker Compose, Docker Swarm, Traefik                  |
+| Infrastructure | Terraform with DigitalOcean provider                           |
+| CI/CD          | GitHub Actions, Docker Hub image publishing, Cosign signing    |
+
+## Architecture
+
+<details>
+
+<summary>Architecture Diagram (click to expand)</summary>
+
+```mermaid
+    graph TD
+        Client["Browser / Client"]
+        Simulator["Simulator / API Client"]
+
+        subgraph Edge["Deployment Edge"]
+            Traefik["Traefik Reverse Proxy"]
+        end
+
+        subgraph Presentation["Presentation Layer"]
+            Next["Next.js Frontend"]
+        end
+
+        subgraph API["API Layer"]
+            Spring["Spring Boot API"]
+            WebReq["Frontend-facing API Requests<br/>timeline, user lookup, registration, follow/message, stats"]
+            SimPublic["Unprotected Simulator/API Requests<br/>POST register, latest"]
+            SimAuth["Simulator Basic Auth Filter<br/>for msgs/fllws"]
+            SimReq["Protected Simulator Requests<br/>msgs, fllws"]
+        end
+
+        subgraph Business["Business Layer"]
+            DatabaseService["DatabaseService"]
+            Store["Store Implementation<br/>JPA-backed"]
+        end
+
+        subgraph Data["Data Layer"]
+            Repositories["Spring Data JPA Repositories"]
+            DB[("PostgreSQL")]
+        end
+
+        subgraph Monitoring["Monitoring / Logging"]
+            NodeExporter["Node Exporter"]
+            Prometheus["Prometheus"]
+            Grafana["Grafana"]
+            Logs["Alloy + Loki"]
+        end
+
+        subgraph Deployment["CI/CD & Deployment"]
+            Actions["GitHub Actions"]
+            Registry["Docker Hub"]
+            Swarm["DigitalOcean Host(s)<br/>Docker Swarm stacks"]
+        end
+
+        subgraph External["External Services"]
+            Gravatar["Gravatar"]
+            LetsEncrypt["Let's Encrypt"]
+        end
+
+        Client --> Traefik
+        Simulator --> Traefik
+        Traefik --> Next
+        Traefik --> Spring
+        Next -->|API calls| Spring
+        Next -->|avatar images| Gravatar
+        Traefik -->|TLS certificates| LetsEncrypt
+
+        Spring --> WebReq
+        Spring --> SimPublic
+        Spring --> SimAuth
+        SimAuth --> SimReq
+        WebReq --> DatabaseService
+        SimPublic --> Store
+        SimReq --> Store
+        DatabaseService --> Repositories
+        Store --> Repositories
+        Repositories --> DB
+
+        Prometheus -->|scrapes app metrics| Spring
+        Prometheus -->|scrapes host metrics| NodeExporter
+        Grafana -->|queries metrics| Prometheus
+        Grafana -->|queries logs| Logs
+        Logs -->|Alloy collects container logs| Swarm
+
+        Actions -->|builds and pushes images| Registry
+        Registry --> Swarm
+        Actions -->|deploy stacks| Swarm
+        Swarm --> Traefik
+        Swarm --> Next
+        Swarm --> Spring
+        Swarm --> DB
+        Swarm --> Prometheus
+        Swarm --> Grafana
+        Swarm --> Logs
+        Swarm --> NodeExporter
+```
+
+</details>
+<br></br>
+Our setup uses two Ubuntu-based DigitalOcean droplets. The primary server hosts the PostgreSQL database, Traefik reverse proxy/load balancer, and acts as the Docker Swarm manager. The second server acts as a Docker Swarm worker and hosts the frontend and backend application services. Docker Swarm coordinates deployment and service management across both servers.
+<br></br>
+The application is a Twitter-inspired system with a React/Next.js frontend and a Java 21 Spring Boot backend API. The frontend serves the client-facing interface, while the backend handles requests and communicates with the database. PostgreSQL runs as a Docker container with persistent storage and is only accessible internally on port 5432.
+<br></br>
+Monitoring and logging are handled using Prometheus, Loki, and Grafana, which are described in later sections.
 
 ## Repository Layout
 
-| Path | Purpose |
-| --- | --- |
-| `devops_backend/` | Java 21 Spring Boot backend, REST API, simulator API, JPA/PostgreSQL persistence, actuator metrics. |
-| `devops_frontend/` | Next.js frontend for timeline, login, registration, following users, and posting messages. |
-| `docker-compose.yml` | Local development stack: backend, frontend, PostgreSQL, Prometheus, Grafana, Loki, Alloy, node-exporter. |
-| `docker-compose.ci.yml` | Minimal backend + PostgreSQL stack used by API integration tests. |
-| `docker-compose.prod.yml` | Legacy single-host production compose file. Current production deployment uses `swarm/`. |
-| `swarm/` | Docker Swarm stack files for Traefik proxy, app services, monitoring, and swarm visualizer. |
-| `monitoring/`, `alloy/`, `loki-config.yaml` | Prometheus, Grafana dashboard/datasource provisioning, Loki, and Alloy log collection config. |
-| `terraform/` | DigitalOcean droplet definition and example variables. |
-| `.github/workflows/` | CI, Docker image publishing, report build, and Swarm deployment workflows. |
-| `test.py` | Backend simulator/API integration tests. |
-| `test_ui.py` | Playwright UI tests for the frontend. These exist, but the frontend CI workflow currently has a placeholder instead of running them. |
-| `report/` | Course report source and PDF build workflow input. |
+| Path                      | Purpose                                                               |
+| ------------------------- | --------------------------------------------------------------------- |
+| `devops_backend/`         | Spring Boot backend source, Maven config, resources, and Dockerfile.  |
+| `devops_frontend/`        | Next.js frontend source, npm config, styles, assets, and Dockerfile.  |
+| `docker-compose.yml`      | Local stack with app, database, monitoring, and logging services.     |
+| `docker-compose.ci.yml`   | Backend + PostgreSQL stack used by API tests.                         |
+| `docker-compose.prod.yml` | Image-based Compose stack.                                            |
+| `swarm/`                  | Swarm stack files for app, Traefik proxy, monitoring, and visualizer. |
+| `monitoring/`             | Prometheus config and Grafana provisioning files.                     |
+| `alloy/config.alloy`      | Docker log discovery and Loki forwarding config.                      |
+| `terraform/`              | DigitalOcean droplet definitions and ignored Terraform state files.   |
+| `.github/workflows/`      | Backend CI, frontend CI, CD, and report PDF workflows.                |
+| `test.py`                 | Backend API tests.                                                    |
+| `test_ui.py`              | Playwright UI tests with mocked API responses.                        |
+| `LOGGING.md`              | Short logging explanation.                                            |
+| `report/report.md`        | Course report Markdown file with section headings.                    |
 
-## System Overview
+The repo also tracks some generated/binary artifacts, including `__pycache__/`,
+`devops_backend/bin/`, `.DS_Store` files, JPEG diagrams in `docs/`, and
+`devops_frontend/app/favicon.ico`.
 
-The backend exposes two API surfaces:
+## Application Overview
 
-- The MiniTwit simulator API: `POST /register`, `GET /msgs`, `GET /msgs/{username}`, `POST /msgs/{username}`, `GET /fllws/{username}`, `POST /fllws/{username}`, and `GET /latest`.
-- The frontend-facing legacy JSON API: `GET /`, `GET /user`, `GET /register`, `GET /spec_user`, `GET /follow`, `GET /unfollow`, `GET /add_message`, and `GET /stats`.
+The backend application name is `itu_minitwit`, and
+`devops_backend/src/main/resources/application.properties` sets `server.port` to
+`5001`.
 
-The backend runs on port `5001` and stores data in PostgreSQL. Hibernate manages the database schema (`spring.jpa.hibernate.ddl-auto=update`), so `schema.sql` is intentionally empty.
+Backend routes visible in controller files:
 
-The frontend runs on port `3000`. It reads `NEXT_PUBLIC_API_HOST` and `NEXT_PUBLIC_API_PORT` and builds API URLs as `<host>:<port>/<path>`.
+- General web/API routes: `GET /`, `/user`, `/register`, `/spec_user`,
+  `/is_followed`, `/follow`, `/unfollow`, `/add_message`, `/stats`, and
+  `/ping`.
+- Simulator/API-test routes: `POST /register`, `GET /latest`, `/msgs`, and
+  `/fllws`.
 
-The observability stack includes:
+`SimulatorAuthFilter.java` protects paths starting with `/msgs` and `/fllws`
+with a fixed Basic Auth header. `test.py` uses `simulator:super_safe!`.
 
-- Prometheus scraping the backend `/actuator/prometheus` endpoint and node-exporter.
-- Grafana with provisioned dashboards and datasources.
-- Loki for log storage.
-- Grafana Alloy for collecting Docker container logs.
+The frontend app files are in `devops_frontend/app/`:
 
-## Prerequisites
+- `/` redirects to `/timeline`.
+- `/timeline` renders the timeline UI.
+- `/login` renders the login UI.
+- `/register` renders the registration UI.
 
-For local development:
-
-- Docker and Docker Compose
-- Java 21 and Maven 3.9.x, if running the backend outside Docker
-- Node.js 20 and npm, if running the frontend outside Docker
-- Python 3.12 with `pytest` and `requests`, if running API tests locally
-- `pytest-playwright` and Chromium, if running UI tests locally
-
-For production/infrastructure work:
-
-- Access to the DigitalOcean account and `do_token`
-- Docker Swarm manager access to the production server
-- Docker Hub credentials for `andersfrimann/devops_backend` and `andersfrimann/devops_frontend`
-- GitHub repository secrets:
-  - `DOCKER_PASSWORD`
-  - `SSH_KEY_FOR_DEPLOYMENT`
+The frontend builds API URLs from `NEXT_PUBLIC_API_HOST` and
+`NEXT_PUBLIC_API_PORT`.
 
 ## Configuration
 
-Backend configuration is controlled by environment variables:
+Backend defaults in `application.properties`:
 
-| Variable | Description | Local Compose value |
-| --- | --- | --- |
-| `MINITWIT_DB_URL` | JDBC URL for PostgreSQL. | `jdbc:postgresql://db:5432/minitwit` |
-| `MINITWIT_DB_USER` | Database username. | `minitwit_user` |
-| `MINITWIT_DB_PASSWORD` | Database password. | `minitwit_password` |
+| Setting                         | Value                                            |
+| ------------------------------- | ------------------------------------------------ |
+| `server.port`                   | `5001`                                           |
+| `MINITWIT_DB_URL` fallback      | `jdbc:postgresql://167.172.111.97:5432/minitwit` |
+| `MINITWIT_DB_USER` fallback     | `minitwit_user`                                  |
+| `MINITWIT_DB_PASSWORD` fallback | `minitwit_password`                              |
+| exposed actuator endpoints      | `health,info,prometheus`                         |
 
-Frontend configuration is controlled by:
+Frontend local env file:
 
-| Variable | Description | Local value |
-| --- | --- | --- |
-| `NEXT_PUBLIC_API_HOST` | API scheme and host. Do not include a trailing slash. | `http://localhost` |
-| `NEXT_PUBLIC_API_PORT` | API port. | `5001` |
-
-Other deployment variables:
-
-| Variable | Used by | Description |
-| --- | --- | --- |
-| `GRAFANA_PASSWORD` | `docker-compose.yml` | Local Grafana admin password. |
-| `ACME_EMAIL` | `swarm/proxy-stack.yml` | Email used by Traefik/Let's Encrypt. |
-| `FORCE_RELOAD_VAR` | `swarm/proxy-stack.yml` | Any changing value that forces the Traefik service to redeploy. |
-| `do_token` | `terraform/terraform.tfvars` | DigitalOcean API token. Keep the real `terraform.tfvars` file out of git. |
-
-## Installation and Local Development
-
-The easiest way to run the full local system is Docker Compose:
-
-```bash
-GRAFANA_PASSWORD=devops123 docker compose up --build
+```env
+NEXT_PUBLIC_API_HOST=http://localhost
+NEXT_PUBLIC_API_PORT=5001
 ```
 
-Local URLs:
+Ports in `docker-compose.yml`:
 
-- Frontend: <http://localhost:3000>
-- Backend/API: <http://localhost:5001>
-- Backend health: <http://localhost:5001/actuator/health>
-- Backend metrics: <http://localhost:5001/actuator/prometheus>
-- PostgreSQL: `localhost:5432`
-- Prometheus: <http://localhost:9090>
-- Grafana: <http://localhost:3001> (`admin` / `GRAFANA_PASSWORD`)
-- Loki: <http://localhost:3100>
-- Alloy: <http://localhost:12345>
+| Service    | Host port |
+| ---------- | --------- |
+| frontend   | `3000`    |
+| backend    | `5001`    |
+| PostgreSQL | `5432`    |
+| Prometheus | `9090`    |
+| Grafana    | `3001`    |
+| Loki       | `3100`    |
+| Alloy      | `12345`   |
 
-Stop the stack and remove local volumes:
+`docker-compose.yml` uses `${GRAFANA_PASSWORD}` for Grafana's admin password.
+
+## Installation and Usage
+
+Run the local Docker Compose stack:
+
+```bash
+GRAFANA_PASSWORD=<local-password> docker compose up --build
+```
+
+Open the frontend:
+
+```text
+http://localhost:3000
+```
+
+Useful backend checks:
+
+```bash
+curl http://localhost:5001/ping
+curl http://localhost:5001/actuator/health
+curl http://localhost:5001/actuator/prometheus
+```
+
+Stop the local stack:
 
 ```bash
 docker compose down -v
 ```
 
-### Run Backend Only
-
-Start PostgreSQL first, then run the Spring Boot app:
+Run the backend directly:
 
 ```bash
 cd devops_backend
-export MINITWIT_DB_URL="jdbc:postgresql://localhost:5432/minitwit"
-export MINITWIT_DB_USER="minitwit_user"
-export MINITWIT_DB_PASSWORD="minitwit_password"
 mvn spring-boot:run
 ```
 
-### Run Frontend Only
-
-Start the backend first, then run the Next.js development server:
+Run frontend commands:
 
 ```bash
 cd devops_frontend
 npm install
-NEXT_PUBLIC_API_HOST=http://localhost NEXT_PUBLIC_API_PORT=5001 npm run dev
+npm run dev
+npm run build
+npm run start
+npm run lint
 ```
 
-The tracked `devops_frontend/.env.local` contains the same localhost API defaults.
+The frontend Dockerfile uses Node `20-alpine`, runs `npm ci`, builds with
+`npm run build`, exposes port `3000`, and starts Next on `0.0.0.0:3000`.
 
-## Usage
+## Tests
 
-With the local stack running, open <http://localhost:3000>. The root route
-redirects to `/timeline`, where you can view the public timeline. Use `/register`
-to create a user, `/login` to sign in, and the timeline UI to post messages or
-follow other users.
-
-The backend can also be checked directly:
-
-```bash
-curl http://localhost:5001/actuator/health
-curl http://localhost:5001/latest
-curl http://localhost:5001/stats
-```
-
-Simulator endpoints under `/msgs` and `/fllws` require the simulator basic auth
-header used by `test.py`.
-
-## Tests and Quality Checks
-
-Backend unit tests:
-
-```bash
-cd devops_backend
-mvn test
-```
-
-Backend Checkstyle:
-
-```bash
-cd devops_backend
-mvn checkstyle:check
-```
-
-Backend API integration tests:
+Backend API tests:
 
 ```bash
 docker compose -f docker-compose.ci.yml up -d --build backend
@@ -242,179 +275,116 @@ pytest -v -x test.py
 docker compose -f docker-compose.ci.yml down -v
 ```
 
+Frontend UI tests are present in `test_ui.py` and use Playwright route mocks.
+The frontend CI workflow installs Playwright dependencies, but its test step is
+an `echo` TODO rather than `pytest -v -x test_ui.py` because of some problems we had.
+
+Backend Maven tests:
+
+```bash
+cd devops_backend
+mvn test
+```
+
 Frontend lint:
 
 ```bash
 cd devops_frontend
-npm install
 npm run lint
-```
-
-Frontend UI tests are in `test_ui.py`. To run them locally:
-
-```bash
-python -m pip install pytest pytest-playwright
-python -m playwright install chromium
-GRAFANA_PASSWORD=devops123 docker compose up -d --build
-pytest -v -x test_ui.py
-docker compose down -v
 ```
 
 ## CI/CD
 
-The GitHub workflows are split by responsibility:
+`ci_backend.yml` runs Maven tests, starts `docker-compose.ci.yml`, runs
+`test.py`, runs Hadolint on the backend Dockerfile, and builds/pushes/signs the
+backend Docker image outside pull requests.
 
-- `ci_backend.yml`
-  - Runs Maven tests.
-  - Starts `docker-compose.ci.yml` and runs `test.py`.
-  - Runs Checkstyle and Hadolint.
-  - On non-PR pushes, builds, signs, and pushes `registry.hub.docker.com/andersfrimann/devops_backend`.
-- `ci_frontend.yml`
-  - Builds the full Docker Compose stack and checks that frontend/backend start.
-  - Runs ESLint.
-  - On non-PR pushes, builds, signs, and pushes `registry.hub.docker.com/andersfrimann/devops_frontend`.
-  - The Playwright test step is currently a TODO placeholder.
-- `cd.yml`
-  - Runs on pushes to `main` and manual `workflow_dispatch`.
-  - SSHes into `167.172.111.97`, pulls `/root/devops`, and redeploys the Swarm stacks with `--resolve-image always`.
-- `build-report.yml`
-  - Builds `report/report.md` into a PDF artifact with Pandoc and LaTeX.
+`ci_frontend.yml` starts the full Compose stack, waits for frontend/backend
+URLs with `curl`, installs Playwright dependencies, runs ESLint, and
+builds/pushes/signs the frontend Docker image outside pull requests.
 
-Pull requests run the checks but do not push Docker images. Pushes to `main` publish images and trigger the production deployment workflow.
-
-## Production Deployment
-
-Current production is Docker Swarm, not the legacy `docker-compose.prod.yml` path.
-
-Production services:
-
-- `proxy`: Traefik v3 reverse proxy with HTTP to HTTPS redirection, Let's Encrypt certificates, dashboard routing, and the shared `minitwit-public` overlay network.
-- `app`: backend, frontend, and PostgreSQL.
-- `monitoring`: Prometheus, Grafana, Loki, Alloy, and node-exporter.
-- `swarm`: Docker Swarm visualizer.
-
-Public routes configured in the Swarm files:
-
-- Frontend: <https://rollbackandrelax.dk>
-- API: <https://api.rollbackandrelax.dk>
-- Legacy simulator/API port: `5001` on the production host
-- Grafana: <https://grafana.rollbackandrelax.dk>
-- Traefik dashboard: <https://traefik.rollbackandrelax.dk>
-- Swarm visualizer: <https://swarm.rollbackandrelax.dk>
-
-The app stack uses:
-
-- Backend image: `andersfrimann/devops_backend:main`
-- Frontend image: `andersfrimann/devops_frontend:main`
-- PostgreSQL image: `postgres:16`
-- PostgreSQL data volume: `db_data_prod`
-- Database placement constraint: `node.hostname == MiniTwit-Database`
-
-### Provision Infrastructure
-
-The `terraform/` directory defines two DigitalOcean droplets:
-
-- `MiniTwit-Database`: `s-2vcpu-4gb`, Ubuntu 24.04, backups and monitoring enabled.
-- `MiniTwit-Worker`: `s-1vcpu-2gb`, Ubuntu 24.04, backups and monitoring enabled.
-
-Create `terraform/terraform.tfvars` from the example and apply:
+`cd.yml` runs on pushes to `main` and manual dispatch. It SSHes to
+`167.172.111.97` as `root`, runs `git pull` in `/root/devops`, and deploys the
+Swarm stacks:
 
 ```bash
-cd terraform
-cp terraform.tfvars.example terraform.tfvars
-# edit terraform.tfvars with the real do_token
-terraform init
-terraform plan
-terraform apply
-```
-
-Docker installation, Swarm initialization/joining, SSH access, DNS, and cloning this repository to `/root/devops` are currently server bootstrap steps outside Terraform.
-
-### Manual Swarm Deployment
-
-From the production server, in `/root/devops`:
-
-```bash
-export ACME_EMAIL="your-email@example.com"
-export FORCE_RELOAD_VAR="$(date +%s)"
-
 docker stack deploy --compose-file swarm/proxy-stack.yml proxy --resolve-image always
 docker stack deploy --compose-file swarm/app-stack.yml app --resolve-image always
 docker stack deploy --compose-file swarm/docker-swarm-ui.yml swarm --resolve-image always
 docker stack deploy --compose-file swarm/monitoring-stack.yml monitoring --resolve-image always
 ```
 
-Deploy `proxy` first because it creates the shared `minitwit-public` overlay network used by the app, monitoring, and visualizer stacks.
+`build-report.yml` builds `report/report.md` into a PDF artifact.
 
-## Operating Production
+## Deployment Files
 
-Useful Swarm commands:
+`swarm/proxy-stack.yml` configures Traefik `v3.6` with ports `80`, `443`, and
+`5001`, HTTP-to-HTTPS redirection, access logs, Let's Encrypt using
+`${ACME_EMAIL}`, and the Docker Swarm provider.
 
-```bash
-docker stack ls
-docker stack ps app
-docker stack services app
-docker service logs app_backend
-docker service logs app_frontend
-docker service logs proxy_traefik
-docker service update --force app_backend
-docker service update --force app_frontend
-```
+`swarm/app-stack.yml` configures:
 
-To inspect the database volume and containers:
+- Backend image `andersfrimann/devops_backend:main` with `3` replicas.
+- Frontend image `andersfrimann/devops_frontend:main`.
+- PostgreSQL `16`, constrained to `node.hostname == MiniTwit-Database`.
+- External network `minitwit-public` and overlay network `backend-db`.
+- Traefik routes for `api.rollbackandrelax.dk` and `rollbackandrelax.dk`.
 
-```bash
-docker service ps app_db
-docker volume ls
-```
+`swarm/monitoring-stack.yml` configures node-exporter, Prometheus, Loki, Alloy,
+and Grafana. Alloy is global. Grafana has a Traefik route for
+`grafana.rollbackandrelax.dk`.
 
-Prometheus scrapes the backend through the Swarm network at `backend:5001/actuator/prometheus`. Alloy reads Docker logs through `/var/run/docker.sock` and ships them to Loki.
+`swarm/docker-swarm-ui.yml` configures `dockersamples/visualizer:latest` with a
+Traefik route for `swarm.rollbackandrelax.dk`.
 
-## Contributing Changes to Production
+## Monitoring and Logging
 
-1. Create a feature branch from `main`.
-2. Make the code, Docker, infrastructure, or documentation change.
-3. Run the relevant local checks from the "Tests and Quality Checks" section.
-4. Open a pull request into `main`.
-5. Confirm the backend/frontend CI checks pass.
-6. Merge to `main`.
-7. The push to `main` builds and pushes Docker images, then `cd.yml` updates the production Swarm.
-8. Verify the deployment with:
+Prometheus scrapes:
 
-```bash
-docker stack ps app
-docker service logs app_backend --tail 100
-docker service logs app_frontend --tail 100
-curl -f https://api.rollbackandrelax.dk/latest
-```
+- `backend:5001` at `/actuator/prometheus`
+- `node-exporter:9100`
 
-For emergency or manual redeploys, run the Swarm deployment commands directly on the production server.
+Grafana provisioning defines:
 
-## Support
+- Prometheus datasource at `http://prometheus:9090`
+- Loki datasource at `http://loki:3100`
+- Dashboard provider path `/etc/grafana/provisioning/dashboards`
 
-For project questions, use the GitHub repository issues or pull request
-discussion in `ITUdevopsGroup/devops`. For production access or secrets, contact
-the course group members who administer the DigitalOcean and GitHub accounts.
+Tracked dashboards:
 
-## Security and Secrets
+- `systemDashboard.json`
+- `businessDashboard.json`
+- `minitwit-logs.json`
 
-- Do not commit real `.env`, `terraform.tfvars`, private keys, or access tokens.
-- GitHub Actions should receive secrets through repository secrets.
-- Production Docker image publishing uses `DOCKER_PASSWORD`.
-- Production SSH deployment uses `SSH_KEY_FOR_DEPLOYMENT`.
-- Traefik dashboard and Swarm visualizer are protected with basic auth labels in the Swarm stack files.
-- The simulator API tests use basic auth credentials `simulator:super_safe!`; the backend currently protects `/msgs` and `/fllws` with this header.
+See [LOGGING.md](LOGGING.md) for the logging summary.
 
-## Project Status
+## Infrastructure
 
-- Active course project for Spring 2026.
-- Docker Swarm is the active production deployment path.
-- The frontend Playwright tests are present in `test_ui.py`, but the GitHub frontend workflow currently does not execute them.
-- `docker-compose.prod.yml` is kept for legacy single-host deployment, while the active production path is Docker Swarm.
-- Database backups are enabled at the DigitalOcean droplet level. A repository-managed PostgreSQL backup/restore workflow is still a TODO.
+`terraform/provider.tf` uses the DigitalOcean provider and defines:
 
-## License
+| Resource                     | Name                | Region | Size          | Image              |
+| ---------------------------- | ------------------- | ------ | ------------- | ------------------ |
+| `digitalocean_droplet.node`  | `MiniTwit-Database` | `fra1` | `s-2vcpu-4gb` | `ubuntu-24-04-x64` |
+| `digitalocean_droplet.node2` | `MiniTwit-Worker`   | `fra1` | `s-1vcpu-2gb` | `ubuntu-24-04-x64` |
 
-No license file is currently included in this repository. Do not reuse or
-redistribute the code outside the course/project context without permission from
-the repository owners.
+Both resources set `backups = true` and `monitoring = true`.
+
+## Contributing Changes
+
+The workflow files show this path for changes intended to reach the configured
+Swarm deployment:
+
+1. Change code, configuration, or documentation.
+2. Run the relevant local commands from [Tests](#tests).
+3. Open a pull request to `main`
+4. Let the configured GitHub Actions workflows run.
+5. Merge or push to `main` to trigger the configured CD workflow.
+
+## Team
+
+**RollbackAndRelax** — MSc DevOps, IT University of Copenhagen, Spring 2026
+
+- Alperen Aydin
+- Maria Møller
+- Juliane Falsig Hvid
+- Anders Frimann
