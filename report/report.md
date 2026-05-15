@@ -31,7 +31,7 @@ The core application is a Twitter inspired application consisting of a frontend 
 
 Our database is a standard Postgres installation running as a Docker container with a persistent volume for persisting data under port 5432, which is only accessed internally by applications. 
 
-We monitor and log the system using Prometheus, Loki and Grafana. The monitoring and logging stack is described in section XX and XX respectively. 
+We monitor and log the system using Prometheus, Loki and Grafana. The monitoring and logging stack is described in section 3.2 and 3.3 respectively. 
 
 
 ![Architecture diagram](images/archi.png)
@@ -40,7 +40,7 @@ We monitor and log the system using Prometheus, Loki and Grafana. The monitoring
 
 ## Dependencies
 
-At figure XX below is a dependency graph of the technologies and tools the project is built on, grouped by level of abstraction. The lines between indicates the dependency of the components where each component points downwards to what it itself depends on.
+At figure 2 below is a dependency graph of the technologies and tools the project is built on, grouped by level of abstraction. The lines between indicates the dependency of the components where each component points downwards to what it itself depends on.
 
 ![deps](images/dependencies.png)
 *Figure 2: Dependencies.*
@@ -56,20 +56,20 @@ We use SonarQube and Codacy for static analysis.
 ![codecy](images/codecy.png)
 *Figure 4: Codecy issues.*
 
-SonarQube's quality gate fails due to security issues, with ratings of E in security, B in reliability, and A in maintainability (see picture XX). Codacy gives an overall grade of A with 5.1 issues per thousand lines of code, though 56 of 60 total issues are security-related (see picture XX). Security is the main concern across both tools.
+SonarQube's quality gate fails due to security issues, with ratings of E in security, B in reliability, and A in maintainability (see figure 3). Codacy gives an overall grade of A with 5.1 issues per thousand lines of code, though 56 of 60 total issues are security-related (see figure 4). Security is the main concern across both tools.
 Our test suite consists of API integration tests covering the core endpoints and Playwright end-to-end tests in CI. We do not have unit tests, and test coverage reporting is not integrated into our static analysis tools.
 
 
 ![graf](images/graf.png)
 *Figure 5: Simulator responses.*
 
-From our Grafana monitoring data, the API had a median response time of 12.3 ms and a p99 of 79.9 ms during the simulator period, peaking at 504 ms under high traffic. During sustained request flooding, as described in the Security Hardening section, CPU reaches 100% and the application becomes unresponsive. We have not consistently measured downtime, but have experienced it during database migration, the move from AWS to DigitalOcean, and over Easter due to the simulator not being restarted correctly (see picture XX).
+From our Grafana monitoring data, the API had a median response time of 12.3 ms and a p99 of 79.9 ms during the simulator period, peaking at 504 ms under high traffic. During sustained request flooding, as described in the Security Hardening section, CPU reaches 100% and the application becomes unresponsive. We have not consistently measured downtime, but have experienced it during database migration, the move from AWS to DigitalOcean, and over Easter due to the simulator not being restarted correctly (see figure 5).
 
 # Process Perspective
 
 ## CI/CD Pipeline
 
-The two CI workflows are triggered on pull requests and pushes to main which is illustrated on picture XX and XX. On pull requests, images are built but not pushed and no deployment occurs, serving as a verification step before code reaches main.The backend CI runs API integration tests against a containerized backend using our Python test suite and Dockerfile linting with Hadolint. The frontend CI runs ESLint for static analysis and has a placeholder for Playwright end-to-end tests which is currently disabled because we ran into some issues when implementing https, Traefik and Docker Swarm. Both workflows build Docker images and, on pushes to main, push them to Docker Hub and sign them using cosign.
+The two CI workflows are triggered on pull requests and pushes to main which is illustrated on figures 6 and 7. On pull requests, images are built but not pushed and no deployment occurs, serving as a verification step before code reaches main.The backend CI runs API integration tests against a containerized backend using our Python test suite and Dockerfile linting with Hadolint. The frontend CI runs ESLint for static analysis and has a placeholder for Playwright end-to-end tests which is currently disabled because we ran into some issues when implementing https, Traefik and Docker Swarm. Both workflows build Docker images and, on pushes to main, push them to Docker Hub and sign them using cosign.
 
 The CD workflow triggers on pushes to main, waits for all CI workflows to complete, then SSHes into the manager node and runs ‘docker stack deploy’ for each of our four stacks: the reverse proxy, application, Swarm management UI, and monitoring.
 
@@ -108,7 +108,7 @@ The business dashboard tracks total registered users, messages posted, follow re
 Our backend logs application activity using SLF4J and Log4j. We log requests to key endpoints, successful actions (registration, message posting, following/unfollowing), warnings and errors (bad requests, missing users, invalid payloads, database failures), and debugging context such as usernames, request parameters, and resource counts.
 Logs are aggregated through a pipeline of Grafana Alloy, Loki, and Grafana. Alloy discovers Docker containers, attaches container and service labels, and forwards logs to Loki for storage. Grafana is provisioned with a Loki datasource and a dashboard with panels for backend logs, warnings, errors, and activity flows such as follows, messages, and registrations.
 A few limitations remain: the logs dashboard only covers the backend, there is no request correlation ID for tracing requests across services, and some log lines include user-identifying values such as usernames and email addresses which ideally should be sanitized.
-Grafana queries Loki with backend filters such as the ones seen in figure XX. Figure XX shows a screenshot of the logs in Grafana.
+Grafana queries Loki with backend filters such as the ones seen in figure 10. Figure 12 shows a screenshot of the logs in Grafana.
 
 ![log](images/log.png)
 *Figure 10: Grafana queries.*
@@ -160,7 +160,7 @@ Regarding the third principle, Continual Learning and Experimentation, the proje
 
 # Use of Generative AI
 
-We used Claude Opus 4.6 from Anthropic throughout the project for writing code, debugging and exploring unfamiliar topics. Also a few figures including the architecture overview (Figure XX) was made with AI, and for the dependency graph (Figure XX) it helped ensure we captured all relevant technologies. It was especially helpful when implementing the monitoring stack and setting up static analysis. As students with limited programming experience, using AI made many tasks more approachable, though at times the volume of code it produced was overwhelming and required careful review. We have noted it as co-author in our commits whenever Claude Opus 4.6 has been used.
+We used Claude Opus 4.6 from Anthropic throughout the project for writing code, debugging and exploring unfamiliar topics. Also a few figures including the architecture overview (Figure 1) was made with AI, and for the dependency graph (Figure 2) it helped ensure we captured all relevant technologies. It was especially helpful when implementing the monitoring stack and setting up static analysis. As students with limited programming experience, using AI made many tasks more approachable, though at times the volume of code it produced was overwhelming and required careful review. We have noted it as co-author in our commits whenever Claude Opus 4.6 has been used.
 
 # Project Artifacts
 
