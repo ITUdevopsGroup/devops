@@ -5,8 +5,6 @@ Spring Boot backend, a Next.js frontend, PostgreSQL persistence, Docker Compose
 setups, Docker Swarm stack files, Terraform infrastructure files, GitHub Actions
 workflows, and monitoring/logging configuration.
 
-This README only describes information visible in files in this project
-checkout.
 
 ## Features
 
