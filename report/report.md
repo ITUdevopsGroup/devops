@@ -19,9 +19,11 @@ numbersections: true
 colorlinks: true
 linkcolor: blue
 urlcolor: blue
+header-includes:
+  - \usepackage{titlesec}
+  - \newcommand{\sectionbreak}{\clearpage}
 ---
 
-\newpage
 
 # Introduction
 This report documents the development, operation, and maintenance of our ITU-MiniTwit system. A Twitter-inspired platform built for the MSc course in DevOps, Software Evolution and Software Maintenance. Starting from a legacy Python 2 application, we re-engineered it into a modern, containerized stack and operated it under realistic conditions while applying DevOps principles throughout. The following sections present the system's architecture and dependencies, our CI/CD pipeline and operational setup, and our reflections on the challenges encountered along the way.
