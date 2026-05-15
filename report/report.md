@@ -1,6 +1,14 @@
 ---
 title: "ITU-MiniTwit — DevOps Report"
-subtitle: "MSc course in DevOps, Software Evolution and Software Maintenance"
+subtitle: |
+  MSc course in DevOps, Software Evolution and Software Maintenance
+
+  | Name | Email |
+  |------|-------|
+  | Juliane Falsig Hvid | juhv@itu.dk |
+  | Maria Elmelund Møller | mamoe@itu.dk |
+  | Anders Frimann Nielsen | andeni@itu.dk |
+  | Alperen Aydin | aayd@itu.dk |
 author: "Group o"
 date: "Spring 2026"
 geometry: margin=2.5cm
@@ -11,25 +19,6 @@ numbersections: true
 colorlinks: true
 linkcolor: blue
 urlcolor: blue
-header-includes:
-  - |
-    \usepackage{booktabs}
-    \AtBeginDocument{
-      \begin{table}[h]
-      \centering
-      \begin{tabular}{ll}
-      \toprule
-      \textbf{Name} & \textbf{Email} \\
-      \midrule
-      Juliane Falsig Hvid & juhv@itu.dk \\
-      Maria Elmelund Møller & mamoe@itu.dk \\
-      Anders Frimann Nielsen & andeni@itu.dk \\
-      Alperen Aydin & aayd@itu.dk \\
-      \bottomrule
-      \end{tabular}
-      \end{table}
-      \newpage
-    }
 ---
 
 \newpage
