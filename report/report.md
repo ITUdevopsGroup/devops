@@ -1,7 +1,7 @@
 ---
 title: "ITU-MiniTwit — DevOps Report"
 subtitle: |
-  MSc course in DevOps, Software Evolution and Software Maintenance
+  MSc course in DevOps, Software Evolution and Software Maintenance - KSDSESM1KE
 
   | Name | Email |
   |------|-------|
@@ -20,8 +20,8 @@ colorlinks: true
 linkcolor: blue
 urlcolor: blue
 header-includes:
-  - \let\oldtableofcontents\tableofcontents
-  - \renewcommand{\tableofcontents}{\oldtableofcontents\clearpage}
+  - \usepackage{etoc}
+  - \etocsettocstyle{\newpage\section*{Table of Contents}}{\newpage}
 ---
 
 
