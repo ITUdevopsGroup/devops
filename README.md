@@ -150,9 +150,7 @@ Monitoring and logging are handled using Prometheus, Loki, and Grafana, which ar
 | `LOGGING.md`              | Short logging explanation.                                            |
 | `report/report.md`        | Course report Markdown file with section headings.                    |
 
-The repo also tracks some generated/binary artifacts, including `__pycache__/`,
-`devops_backend/bin/`, `.DS_Store` files, JPEG diagrams in `docs/`, and
-`devops_frontend/app/favicon.ico`.
+
 
 ## Application Overview
 
